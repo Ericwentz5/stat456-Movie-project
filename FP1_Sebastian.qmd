@@ -1,0 +1,23 @@
+---
+title: "FP1 P2"
+format: html
+---
+
+Group 5: !Sebastian Stefanowicz!, Eric Wentz, and Natalia Morales Flores
+
+```{r warning=FALSE}
+library(tidyverse)
+library(readr)
+
+title_basics <- read_tsv("data/raw/title.basics.tsv")
+title_ratings <- read_tsv("data/raw/title.ratings.tsv")
+```
+
+```{r}
+# Clean data to separate out genres
+```
+
+
+
+
+
