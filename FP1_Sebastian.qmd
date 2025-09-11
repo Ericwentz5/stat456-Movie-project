@@ -1,23 +1,117 @@
 ---
 title: "FP1 P2"
 format: html
+editor: 
+  markdown: 
+    wrap: 72
 ---
 
-Group 5: !Sebastian Stefanowicz!, Eric Wentz, and Natalia Morales Flores
+AI Usage: No AI used
 
-```{r warning=FALSE}
+Author: Sebastian Stefanowicz
+
+Group 5: Sebastian Stefanowicz, Eric Wentz, and Natalia Morales Flores
+
+Subject Area: movies!
+
+Research Questions: 1. Movie adaptations: how does the relative
+faithfulness of movie adaptations to their source material affect their
+outcomes (critical reception, audience reception, box office, etc.)
+
+2\. Recommendations based on user preferences and movie characteristics:
+using the user preferences at that moment to recommend a movie with
+similar traits, including from ratings, to genre and length in minutes,
+etc.
+
+3\. Cult Classics: classify movies with a high volume of
+votes/logs/watches but low box office earnings as “cult classics”/assume
+that they gained acclaim/popularity after their initial release, then
+compare these films with each other and contrast them with films that
+were successful in theaters.
+
+```{r warning=FALSE, message=FALSE}
 library(tidyverse)
 library(readr)
+library(TMDb)
 
 title_basics <- read_tsv("data/raw/title.basics.tsv")
+```
+
+Source: Internet Movie Database
+
+Data description: This data frame contains basic information for IMDB's
+full list of films including, title, medium (short, movie, tv show,
+etc), runtime in minutes, up to 3 primary genres, R-rating, release
+years, and a unique identifier.
+
+Limitations: The primary limitation for this and all IMDB data tables is
+the absence of box office and budget variables.
+
+Variables:
+
+tconst: unique identifier
+
+titleType: format
+
+primaryTitle: self explanatory
+
+originalTitle: self explanatory
+
+isAdult: boolean = 1 if the title is R-rated
+
+startYear: release year
+
+endYear: the year in which a TV show ended, NA for movies
+
+runtimeMinutes: self explanatory
+
+genres: a string containing up to 3 genres most closely associated with
+the title separated by commas
+
+Viz:
+
+```{r}
+title_basics_exp <- title_basics %>% filter(titleType == "movie", ) %>% mutate(decades = (as.numeric(startYear) %/% 10) * 10)
+
+ggplot(title_basics_exp, aes(x=decades, fill=factor(isAdult))) +
+  geom_bar() +
+  scale_fill_manual(
+    values = c("0" = "skyblue2", "1" = "orange"),
+    labels = c("Not R-rated", "R-rated")
+  ) +
+  labs(title="Count of R-Rated and Non R-Rated Films by Decade", x="Decade", y="Count",fill=NULL) +
+  theme_classic()
+
+
 title_ratings <- read_tsv("data/raw/title.ratings.tsv")
 ```
 
+Source: Internet Movie Database
+
+Data description: Contains the total number of votes and average rating
+for movies (identified with their unique identifiers).
+
+Limitations: The primary limitation for this and all IMDB data tables is
+the absence of box office and budget variables.
+
+Variables:
+
+tconst: unique identifier
+
+averageRating: the average rating from 1-10 given to a title by users of
+the IMDB site
+
+numVotes: the total number of users who have rated a title on the IMDB
+site
+
+Viz:
+
 ```{r}
-# Clean data to separate out genres
+ggplot(title_ratings, aes(x=averageRating)) +
+  geom_density(fill="skyblue") +
+  labs(title="Density of Average IMDB User Ratings", x="Average Rating", y="Density") +
+  theme_classic()
 ```
 
-
-
-
+Join on: These, and other IMDB tables, could be easily joined on the tconst unique identifier for each movie/show.
 

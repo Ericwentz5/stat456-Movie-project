@@ -1,0 +1,21 @@
+---
+title: "Untitled"
+format: html
+---
+
+```{r}
+# Load TMDB data
+key <- "c87bcab7333598a66552a72264adeb06"
+id <- 550
+
+tmdb_test2 <- movie(api_key = key, id = 550)
+
+tmdb_test_df2 <- as.data.frame(tmdb_test2)
+
+top_rated <- movie_top_rated(api_key = key, page = 1)
+
+top_rated_df <- as_tibble(top_rated)
+```
+
+
+
