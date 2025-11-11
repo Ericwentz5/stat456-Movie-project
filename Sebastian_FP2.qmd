@@ -1,0 +1,38 @@
+---
+title: "Sebastian_FP2"
+format: html
+---
+
+### Loading and cleaning data
+
+```{r message=FALSE}
+library(tidyverse)
+library(ggrepel)
+
+movies_df <- read_csv("data/raw/top_2000_movies.csv")
+ 
+movies_df_working <- movies_df %>% filter(budget > 10000, revenue > 10000) %>% # set arbitrary budget and revenue lower bounds to filter out weird anomalies
+  mutate(release_date = ymd(release_date),
+         release_date_num = as.numeric(release_date),
+         rev_budget_ratio = revenue / budget,
+         title_short = str_trunc(title, width = 20, side = "right")) %>% # make revenue/budget variable
+  arrange(desc(rev_budget_ratio)) %>%
+  group_by(imdb_id) %>% # remove dupicate rows
+  filter(n() == 1) %>%
+  ungroup()
+  
+cults <- movies_df_working %>%
+  filter(rev_budget_ratio < 3, vote_average > 7.8, release_date < "2010-01-01" )
+```
+
+### Viz
+
+```{r fig.alt="A scatterplot titled 'Indentifying Cult Classics' with both dots and labels visualizing the average rating given to movies by users of TMDB.com on the Y-axis and the profitability (measured as the ratio of box office return to budget) of those movies on the X-axis.", fig.width=10, fig.height=6}
+ggplot(cults, aes(x = rev_budget_ratio, y = vote_average, label = title_short)) +
+  geom_point() +
+  geom_text_repel(size = 3) +
+  labs(title = "Identifying Cult Classics", x = "Profitability (Revenue / Budget)", y = "Average Audience Rating") +
+  theme_classic()
+```
+
+
