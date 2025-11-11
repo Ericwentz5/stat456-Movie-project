@@ -1,0 +1,124 @@
+---
+title: "LLM Classification and Preliminary Results"
+format: html
+---
+Sebastian Stefanowicz
+
+### Setup
+```{r message=FALSE}
+Sys.setenv(OPENAI_API_KEY = "insert API key here")
+
+library(tidyverse)
+library(ellmer)
+library(dplyr)
+library(tibble)
+library(patchwork)
+
+# movies_df_10k <- read_csv("data/raw/top_10000_movies.csv")
+```
+
+### LLM Classification using OpenAI API
+```{r message=FALSE}
+# Clean Data
+# movies_10k_w_llm <- movies_df_10k %>% filter(release_date < "2010-01-01", budget > 10, revenue > 10)
+# 
+# llm_input_10k <- movies_10k_w_llm %>% select(title, release_date) %>% mutate(prompt_text = paste0(
+#     "Title: ", title, ". Release date: ", release_date, "."))
+
+# Run single-shot detection using GPT-4.1-mini with the structured output of a 1-0 binary classifier variable
+# single_shot_results <- parallel_json_completion(
+#   system_prompt = "Evaluate whether or not each film is widely/definitively considered to be a 'cult classic'.",
+# 
+#   user_prompts = llm_input_10k$prompt_text,
+# 
+#   type_obj = type_object(
+#     llm_cult = type_string("Either 1 (a cult classic) or 0 (not a cult classic)")
+#   ),
+# 
+#   model = "gpt-4.1-mini"
+# )
+
+# Add results to the df
+# movies_10k_w_llm$llm_class_1 <- single_shot_results$llm_cult
+
+# Repeat 5 times and aggregate results to account for anomalous results
+
+# Create sum variable showing the number out of the 5 llm classifications that said each subject was a cult film
+# Create final classification variable taking films that received a cult classification at least 4 out of 5 times
+# movies_10k_w_llm <- movies_10k_w_llm %>% mutate(llm_sum = as.numeric(llm_class_1) + as.numeric(llm_class_2) + as.numeric(llm_class_3) + as.numeric(llm_class_4) + as.numeric(llm_class_5),
+#                                                 llm_class_final = if_else(llm_sum >= 4, 1, 0))
+
+# Look at distribution
+# table(movies_10k_w_llm$llm_sum)
+
+# Save results
+# write.csv(movies_10k_w_llm, "data/raw/10k_pre-2010-01-01-w-llm-classification.csv")
+```
+
+
+### Visualized Characteristics of These Two Classification Groups
+```{r message=FALSE}
+movies_10k_w_llm <- read_csv("data/raw/10k_pre-2010-01-01-w-llm-classification.csv")
+
+# Set up fill
+movies_10k_w_llm <- movies_10k_w_llm |>
+  mutate(
+    llm_class_final = factor(llm_class_final,
+                             levels = c(0, 1),
+                             labels = c("No", "Yes"))
+  )
+
+# Individual plots
+vote_average_plot <- ggplot(movies_10k_w_llm, aes(x = vote_average, fill = llm_class_final)) +
+  geom_density(position = "identity", alpha = 0.7) +
+  labs(y = NULL, x = "Average User Rating", fill = "Cult Classic Status") +
+  theme_classic()
+
+log_revenue_plot <- ggplot(movies_10k_w_llm, aes(x = log(revenue), fill = llm_class_final)) +
+  geom_density(position = "identity", alpha = 0.7) +
+  labs(y = NULL, x = "Log Box Office Revenue", fill = "Cult Classic Status") +
+  theme_classic()
+
+log_budget_plot <- ggplot(movies_10k_w_llm, aes(x = log(budget), fill = llm_class_final)) +
+  geom_density(position = "identity", alpha = 0.7) +
+  labs(y = NULL, x = "Log Production Budget", fill = "Cult Classic Status") +
+  theme_classic()
+
+runtime_plot <- ggplot(movies_10k_w_llm, aes(x = runtime, fill = llm_class_final)) +
+  geom_density(position = "identity", alpha = 0.7) +
+  labs(y = NULL, x = "Runtime (Minutes)", fill = "Cult Classic Status") +
+  theme_classic()
+
+# Final plot
+final_plot <- (
+  (vote_average_plot | runtime_plot) /
+  (log_budget_plot | log_revenue_plot)
+) +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+
+final_annotated <- final_plot +
+  plot_annotation(
+    title = "Distribution of Movie Characteristics by LLM Cult Classification",
+    caption = "Sources: TMDB and OpenAI APIs"
+  )
+
+# Save and display final plot
+# ggsave("final_plot.png", final_annotated, width = 8, height = 6, dpi = 300)
+final_annotated
+```
+
+Interpretation: On average cult classics, as identified by GPT-4.1-mini, have shorter runtimes, lower budgets, lower box office revenues, and more tightly concentrated average user scores than non-cult classics.
+
+
+# Preliminary classification
+```{r message=FALSE}
+# Logistic Regression
+model_logit <- glm(llm_class_final ~ vote_average + popularity + budget + revenue + runtime,
+                   data = movies_10k_w_llm,
+                   family = binomial)
+summary(model_logit)
+```
+
+This test model corroborates our the visual differences in classification groups observed with the above plots i.e. cult and non-cult films appear to on average differ in user score, budget, revenue, and runtime.
+

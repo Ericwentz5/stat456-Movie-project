@@ -1,0 +1,104 @@
+---
+title: "Loading TMDB Data"
+format: html
+---
+Sebastian Stefanowicz
+
+### Setup
+```{r message=FALSE}
+library(tidyverse)
+library(readr)
+library(TMDb)
+library(ggrepel)
+
+# API Key
+key <- "insert API key here"
+```
+
+
+### Using TMDB API
+```{r}
+# Tests:
+
+# Getting detailed info minus variables with multiple values
+# tmdb_test2 <- movie(api_key = key, id = 550)
+# tmdb_scalars <- tmdb_test2[sapply(tmdb_test2, function(x) length(x) == 1)]
+# tmdb_test_df2 <- as_tibble(tmdb_scalars)
+
+# Manually extract variables with multiple values
+# genres_df <- as_tibble(tmdb_test2$genres)
+# companies_df <- as_tibble(tmdb_test2$production_companies)
+# countries_df <- as_tibble(tmdb_test2$production_countries)
+
+# Get general info by page
+# top_rated <- movie_top_rated(api_key = key, page = 2)
+# top_rated_df <- as_tibble(top_rated)
+
+
+# Creating top 10000 dataset:
+# top_rated_ids <- map_dfr(1:500, function(p) {
+#   page <- movie_top_rated(api_key = key, page = p)
+#   as_tibble(page$results) %>% select(id)
+# })
+
+# Function to get scalar fields for one movie safely
+# get_movie_scalars <- function(id, api_key) {
+#   tryCatch({
+#     m <- movie(api_key = api_key, id = id)
+#     scalars <- m[sapply(m, function(x) length(x) == 1)]
+#     as_tibble(scalars)
+#   }, error = function(e) {
+#     message(paste("Failed for ID:", id))
+#     return(NULL)
+#   })
+# }
+
+# Applying scalar function to IDs
+# movies_df_10k <- map_df(top_rated_ids$id, ~ get_movie_scalars(.x, key))
+
+# Making correction from USD to JPY
+# movies_df_10k <- movies_df_10k %>% mutate(budget = if_else(title == "Paprika", 2600000, budget))
+
+# Saving Data
+# write.csv(movies_df_10k, "data/raw/top_10000_movies.csv")
+```
+
+
+### Exploring the Data and Manually Classifying
+```{r warning=FALSE, message=FALSE}
+# Load data
+movies_df_10k <- read_csv("data/raw/top_10000_movies.csv")
+
+# Cleaning data
+movies_df_working <- movies_df_10k %>% filter(budget > 10000, revenue > 10000) %>% # set arbitrary budget and revenue lower bounds to filter out weird anomalies
+  mutate(release_date = ymd(release_date),
+         release_date_num = as.numeric(release_date),
+         rev_budget_ratio = revenue / budget,
+         title_short = str_trunc(title, width = 20, side = "right")) %>% # make revenue/budget variable
+  arrange(desc(rev_budget_ratio)) %>%
+  group_by(imdb_id) %>% # remove dupicate rows
+  filter(n() == 1) %>%
+  ungroup()
+  
+cults <- movies_df_working %>%
+  filter(rev_budget_ratio < 2, vote_average > 7.8, original_language == "en") %>%
+  mutate(before_2015 = if_else(release_date < "2015-01-01", "Pre-2015", "Post-2015"))
+
+# Preliminary thresholds for english language cult movies (for now this just means good movies that flopped)
+cults_no_new_stuff <- movies_df_working %>%
+  filter(rev_budget_ratio < 2, vote_average > 7.6, original_language == "en", release_date < "2010-01-01")
+
+# Test visual
+ggplot(cults_no_new_stuff, aes(x = rev_budget_ratio, y = vote_average, label = title_short)) +
+  geom_point() +
+  geom_text_repel(size = 3) +
+  labs(title = "Cult Classics", x = "Profitability (Revenue / Budget)", y = "Average Rating") +
+  theme_classic()
+```
+
+This visual serves as a proof of concept that even using a few intuitive variables is relatively effective at picking out cult classics within our data.
+
+
+
+
+
