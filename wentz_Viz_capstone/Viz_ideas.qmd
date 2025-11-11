@@ -1,0 +1,159 @@
+---
+title: "Viz_ideas"
+format: html
+---
+
+```{r}
+directors  <- read.csv("directors.csv")
+movies <- read.csv("movies.csv")
+
+
+```
+
+
+```{r}
+library(dplyr)
+
+directors <- directors %>%
+  rename(director_id = id)
+
+```
+
+```{r}
+movies_directors <- movies %>%
+  left_join(directors, by = "director_id")
+```
+
+```{r}
+movies_directors <- movies_directors %>%
+  mutate(
+    year = as.numeric(year),
+    revenue = as.numeric(revenue),
+    popularity = as.numeric(popularity),
+    vote_average = as.numeric(vote_average),
+    vote_count = as.numeric(vote_count)
+  )
+
+
+movies_directors <- movies_directors %>%
+  filter(!is.na(revenue), !is.na(popularity), !is.na(director_name))
+
+
+movies_directors <- movies_directors %>%
+  filter(revenue > 0)
+
+
+
+movies_directors <- movies_directors %>%
+  mutate(budget_display = format(budget, scientific = FALSE))
+
+
+```
+
+```{r}
+movies_directors <- movies_directors %>%
+  mutate(period = floor(year / 5) * 5)
+
+
+
+movies_directors <- movies_directors %>%
+  group_by(period) %>%
+  mutate(
+    revenue_rank = percent_rank(revenue),
+    popularity_rank = percent_rank(popularity),
+    vote_count_rank = percent_rank(vote_count)
+  ) %>%
+  ungroup() %>%
+  mutate(
+  cult_score = (
+    (1 - revenue_rank) * 0.45 +   # underperformed commercially
+    popularity_rank * 0.40 +      # strong long-term interest
+    vote_count_rank * 0.15        # active fan engagement
+  )
+)
+
+```
+
+
+
+```{r}
+movies_directors %>%
+  select(title, year, revenue_rank, popularity_rank, cult_score) %>%
+  arrange(desc(cult_score)) %>%
+  head(10)
+
+```
+
+
+```{r}
+director_summary <- movies_directors %>%
+  group_by(director_name, gender) %>%
+  summarise(
+    avg_revenue = mean(revenue, na.rm = TRUE),
+    avg_cult_score = mean(cult_score, na.rm = TRUE),
+    n_films = n()
+  ) %>%     # only directors with at least 2 films
+  arrange(desc(avg_cult_score))
+```
+
+```{r}
+library(ggplot2)
+
+director_summary <- director_summary %>% ungroup()
+
+
+top_directors <- director_summary %>%
+  slice_max(order_by = avg_cult_score, n = 10, with_ties = FALSE)
+
+
+ggplot(top_directors, aes(x = reorder(director_name, avg_cult_score), y = avg_cult_score, fill = gender)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(
+    title = "Directors with Highest Average Cult Score",
+    x = "Director",
+    y = "Average Cult Score"
+  )
+
+```
+
+```{r}
+movies_directors %>%
+  group_by(period) %>%
+  summarise(mean_cult = mean(cult_score, na.rm = TRUE)) %>%
+  ggplot(aes(x = period, y = mean_cult)) +
+  geom_line(size = 1.2, color = "#d73027") +
+  geom_point(size = 3) +
+  labs(
+    title = "Average Cult Score by 5-Year Period",
+    subtitle = "Cult potential peaked during eras of new media (VHS, DVD, streaming)",
+    x = "5-Year Period",
+    y = "Mean Cult Score"
+  ) +
+  theme_minimal(base_size = 12)
+
+```
+```{r}
+library(ggplot2)
+
+ggplot(director_summary, aes(x = log10(avg_revenue), y = avg_cult_score, color = gender)) +
+  geom_point(alpha = 0.7, size = 3) +
+  scale_color_manual(values = c("Male" = "#f4a582", "Female" = "#92c5de")) +
+  geom_smooth(method = "lm", se = FALSE, color = "gray40", linetype = "dashed") +
+  labs(
+    title = "Cult Potential vs. Commercial Success by Director",
+    subtitle = "Cult directors tend to show lower average revenue but higher cult engagement",
+    x = "Average Revenue (log scale)",
+    y = "Average Cult Score",
+    color = "Director Gender"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    legend.position = "bottom"
+  )
+
+
+```
+
+
