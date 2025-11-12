@@ -222,4 +222,19 @@ server <- function(input, output, session) {
 shinyApp(ui, server)
 
 ```
+## Interpretation
+Each movie’s ratings-over-time was turned into four simple numbers:
+1. How long it takes to get  50% of all ratings (time_to_takeoff_T50)
+2. How many years until the biggest peak (peak_lag_years)
+3. How strong the long tail is (extended trickle of attention after the release window) (long_tail_ratio_5_15_over_0_2)
+4. How fast interest fades after the peak (decay_half_life_years)
+Across movies, we see two clear patterns:
+* Slow burn: they build slowly, peak many years later, get far more ratings in years 5–15 than at launch, and fade slowly. These look cult-leaning.
+* Early spike: big right away, weak long tail, and fade fast—more mainstream.
+You can pick any film in the app to see its curve and these four numbers. For example, Pride & Prejudice (2005) shows a slow burn: late peak, strong long tail, and steady interest after.
 
+## AI statement
+Chat GPT was used to debug and make the code work for the following sections:
+- Fills yearly gaps
+- fallback to raw counts if it fails
+- time from peak until activity
