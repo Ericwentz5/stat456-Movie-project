@@ -22,12 +22,12 @@ movies_df_working <- movies_df %>% filter(budget > 10000, revenue > 10000) %>% #
   ungroup()
   
 cults <- movies_df_working %>%
-  filter(rev_budget_ratio < 3, vote_average > 7.8, release_date < "2010-01-01" )
+  filter(rev_budget_ratio < 2, vote_average > 7.5, release_date < "2010-01-01", popularity < 10)
 ```
 
 ### Viz
 
-```{r fig.alt="A scatterplot titled 'Indentifying Cult Classics' with both dots and labels visualizing the average rating given to movies by users of TMDB.com on the Y-axis and the profitability (measured as the ratio of box office return to budget) of those movies on the X-axis.", fig.width=10, fig.height=6}
+```{r fig.alt="A scatterplot titled 'Indentifying Cult Classics' with both dots and labels visualizing the average rating given to movies by users of TMDB.com on the Y-axis and the profitability (measured as the ratio of box office return to budget) of those movies on the X-axis.", warning=FALSE}
 ggplot(cults, aes(x = rev_budget_ratio, y = vote_average, label = title_short)) +
   geom_point() +
   geom_text_repel(size = 3) +

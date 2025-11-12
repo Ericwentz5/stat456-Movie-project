@@ -4,6 +4,8 @@ format: html
 ---
 Sebastian Stefanowicz
 
+AI Usage: Used ChatGPT to help construct the get_movie_scalars function.
+
 ### Setup
 ```{r message=FALSE}
 library(tidyverse)
@@ -67,7 +69,7 @@ key <- "insert API key here"
 ### Exploring the Data and Manually Classifying
 ```{r warning=FALSE, message=FALSE}
 # Load data
-movies_df_10k <- read_csv("data/raw/top_10000_movies.csv")
+movies_df_10k <- read_csv("../data/raw/top_10000_movies.csv")
 
 # Cleaning data
 movies_df_working <- movies_df_10k %>% filter(budget > 10000, revenue > 10000) %>% # set arbitrary budget and revenue lower bounds to filter out weird anomalies

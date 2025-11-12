@@ -97,6 +97,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p>Sebastian Stefanowicz</p>
+<p>AI Usage: Used ChatGPT to help construct the get_movie_scalars function.</p>
 <section id="setup" class="level3">
 <h3 class="anchored" data-anchor-id="setup">Setup</h3>
 <div class="cell">
@@ -161,7 +162,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="exploring-the-data-and-manually-classifying">Exploring the Data and Manually Classifying</h3>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load data</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>movies_df_10k <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/raw/top_10000_movies.csv"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>movies_df_10k <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"../data/raw/top_10000_movies.csv"</span>)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Cleaning data</span></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>movies_df_working <span class="ot">&lt;-</span> movies_df_10k <span class="sc">%&gt;%</span> <span class="fu">filter</span>(budget <span class="sc">&gt;</span> <span class="dv">10000</span>, revenue <span class="sc">&gt;</span> <span class="dv">10000</span>) <span class="sc">%&gt;%</span> <span class="co"># set arbitrary budget and revenue lower bounds to filter out weird anomalies</span></span>
