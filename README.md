@@ -8,7 +8,7 @@
 - Can we predict future cult status for recent films?
 
 ## Data Sources
-- The Movie Database: contains general information for the 10,000 highest rated movies based on user scores including, title, release date, budget, revenue, average score, runtime, and the unique identifier linking each movie to the IDMB database. Combined with an LLM generated binary outcome variable.
+- The Movie Database: contains general information for the 10,000 highest rated movies based on user scores including title, release date, budget, revenue, average score, runtime, and the unique identifier linking each movie to the IDMB database. Combined with an LLM generated binary outcome variable.
 - Internet Movie Database: utilize datasets containing user votes over time and information on directors and other people associated with each film.
   
 ## QMD Guide/Contributions So Far
@@ -17,7 +17,10 @@ Sebastian
 - LLM_Classification.qmd contains script to query the OpenAI API to create a binary cult classifier that we used as our outcome variable and visualize the characteristics of the resulting groups.
 
 ## Plan
-- Awards (particularly smaller festival awards rather than oscars) as a predictor. (Sebastian)
+- Awards or lack of awards as a predictor. (Sebastian)
 - Investigate impact of gender of director. (Eric)
 - Pick a year and aggregate+visualize volume of votes over time for cults and non-cults. If this is interesting, further investigate glide path subcategories. (Natalia)
 - Refine classification models and start predicting! (Everyone)
+
+## Ethical Considerations
+- 
