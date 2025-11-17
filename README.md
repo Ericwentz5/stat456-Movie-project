@@ -2,7 +2,7 @@
 ### By Natalia Morales Flores, Eric Wentz, and Sebastian Stefanowicz
 
 ## Eric Wentz FP4
-- All relevent info is in the QMD under the Folder Wentz_viz_capstone
+- All relevent info is in the QMD or HTML under the Folder Wentz_viz_capstone
 
 
 ## Research Question(s)
