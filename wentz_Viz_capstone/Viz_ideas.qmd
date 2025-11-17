@@ -1,9 +1,74 @@
 ---
-title: "Viz_ideas"
+title: "Cult Classics Project: Intermediate Narrative"
+author: "Eric Wentz"
+date: "November 2025"
 format: html
 ---
+ChatGPT (GPT-5) was used to assist with writing structure, code organization, and narrative flow. All analytical code, datasets, and interpretations are original.
+
+## Project Overview
+
+This project examines the relationship between a director’s creative expression and how that creativity is received by audiences and the market. The focus is on the idea that directorial creativity is often misunderstood or undervalued at release—films that take risks, defy convention, or explore niche ideas may fail commercially but later achieve cult status through dedicated audiences. By quantifying “cult potential” through measurable variables like revenue, popularity, and audience engagement, this analysis highlights how creativity can clash with mainstream taste. Directors who experiment stylistically or narratively often face limited box-office success but gain long-term cultural recognition. Understanding these patterns helps illustrate how artistic innovation, risk-taking, and time interact to shape what we now call cult classics.
+
+
+## Sub-Research Questions
+
+Research Questions
+
+What measurable traits predict a movie’s likelihood of developing a cult following?
+
+Do directors with lower commercial success tend to have higher “cult engagement”?
+
+How do gender and creative style influence cult potential?
+
+Are certain genres or ideas harder to market initially but more likely to gain dedicated followings later?
+
+
+
+
+
+## Dataset Description
+ALL DATA IS IN THE wentz_viz_capstone folder in the repo
+
+The dataset combines movie- and director-level information from multiple sources.
+Movies data: includes title, release year, revenue, popularity, vote average, and vote count.
+Directors data: includes director name, ID, and gender.
+These are merged into a single movies_directors dataset linking films to directors.
+Each record represents one film, allowing analysis across time periods and creative factors.
+Purpose: to quantify how low-revenue but high-interest films differ from commercial hits and how that reflects
+creative reception.
+
+
+
+## Ethical considerations
+
+This research carries minimal risk but raises key awareness issues:
+Data may reflect systemic gender and cultural bias, as male directors are historically overrepresented.
+Interpretations must avoid labeling underperformance as “failure” — cult status can stem from lack of visibility, not quality. Findings should encourage inclusive recognition of creative risk rather than reinforce industry hierarchies.
+
+
+## Summary of Analysis and Results (So Far)
+
+Created a “cult score” metric combining popularity, revenue, and engagement ranks.
+Found that cult potential is often inversely related to box office success, suggesting that creative or unconventional works may struggle commercially. Over time, average cult scores peaked in eras of media innovation (VHS, DVD, streaming), when rediscovery became easier. Director-level analysis shows that male directors dominate high cult scores, but gender representation patterns suggest further study is needed. Preliminary conclusion: creative experimentation and non-mainstream storytelling often become appreciated later, forming the foundation of cult status. Next steps include adding genre and keyword data to examine whether certain themes (e.g., surrealism, anti-heroes, counterculture) face greater marketing challenges.
+
+
+## project plan and remaining work
+Need to Expand dataset with genre and keyword features
+Pull and merge metadata from TMDB or IMDb
+
+Analyze genre-specific cult trends
+Compare cult score by genre and theme
+
+Write final narrative and interpretations
+Integrate findings into report
+
+Prepare final visualizations and presentation
+Highlight directors, gender, and creativity insights
 
 ```{r}
+
+
 directors  <- read.csv("directors.csv")
 movies <- read.csv("movies.csv")
 
@@ -156,4 +221,7 @@ ggplot(director_summary, aes(x = log10(avg_revenue), y = avg_cult_score, color =
 
 ```
 
+
+## Contributions
+Eric Wentz: Conducted all data cleaning, visualization, and analysis to date; drafted research questions and intermediate report.
 
