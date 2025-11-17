@@ -1,6 +1,9 @@
 # Quantifying Cult Classics
 ### By Natalia Morales Flores, Eric Wentz, and Sebastian Stefanowicz
 
+## Eric Wentz FP4
+- All relevent info is in the QMD under the Folder Wentz_viz_final
+
 
 ## Research Question(s)
 - What are the measurable characteristics of cult classic films? Is there a recipe or is it largely intangible?
