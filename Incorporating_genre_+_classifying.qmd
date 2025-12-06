@@ -1,0 +1,68 @@
+---
+title: "Incorporating Genre and Classifying"
+format: html
+---
+
+### Setup
+```{r message=FALSE}
+library(tidyverse)
+library(ellmer)
+library(dplyr)
+library(tibble)
+library(patchwork)
+library(fastDummies)
+
+imdb <- read_tsv("data/raw/title.basics.tsv")
+movies_10k_w_llm <- read_csv("data/raw/10k_pre-2010-01-01-w-llm-classification.csv")
+```
+
+```{r message=FALSE}
+unique(imdb$titleType)
+
+imdb <- imdb %>% filter(titleType == "movie")
+
+# separating out genre arrays
+imdb <- imdb %>%
+  mutate(
+    genres = str_split(genres, ",")
+  ) %>%
+  mutate(
+    genre1 = map_chr(genres, ~ .x[1] %||% NA_character_),
+    genre2 = map_chr(genres, ~ .x[2] %||% NA_character_),
+    genre3 = map_chr(genres, ~ .x[3] %||% NA_character_)
+  )
+
+# combining imdb and tmdb data
+combined_movies <- movies_10k_w_llm %>% mutate(tconst = imdb_id) %>% left_join(imdb, by = "tconst")
+
+# remove movies with na for genre1
+combined_movies_filtered <- combined_movies %>% filter(!is.na(genre1))
+
+unique(combined_movies_filtered$genre1)
+
+# create genre dummy variables
+all_genres <- c("Drama", "Crime", "Biography", "Adventure", "Action", "Animation",
+                "Comedy", "Horror", "Mystery", "Western", "Fantasy", "Thriller",
+                "Sci-Fi", "Romance", "Film-Noir", "Family", "Musical", "Documentary")
+
+combined_movies_filtered$genre1 <- factor(combined_movies_filtered$genre1,
+                                          levels = all_genres)
+
+combined_movies_filtered <- combined_movies_filtered %>%
+  fastDummies::dummy_cols(select_columns = "genre1", remove_first_dummy = FALSE)
+
+
+# logistic Regression to see test genres
+model_logit <- glm(llm_class_final ~ vote_average + popularity + budget + revenue + runtime + genre1_Drama + genre1_Crime + genre1_Biography + genre1_Adventure + genre1_Action + genre1_Animation + genre1_Comedy + genre1_Horror + genre1_Mystery + genre1_Western + genre1_Fantasy + genre1_Thriller + `genre1_Sci-Fi` + genre1_Romance + `genre1_Film-Noir` + genre1_Family + genre1_Musical + genre1_Documentary,
+                   data = combined_movies_filtered,
+                   family = binomial)
+summary(model_logit)
+
+model_logit <- glm(
+  llm_class_final ~ vote_average + popularity + budget + revenue + runtime + genre1,
+  data = combined_movies_filtered,
+  family = binomial
+)
+
+# some genre dummies are significant but others arent
+```
