@@ -1,0 +1,198 @@
+---
+title: "Final_Viz"
+format: html
+---
+
+
+
+AI Usage statment: Used GPT-5.1 for syntax related help and to brainstorm ideas for effective visualizations and how to clean the data in order to create those. 
+
+
+# load in data 
+```{r}
+library(dplyr)
+
+tmdb_5000 <- read.csv("tmdb_5000_movies.csv")
+
+
+llm_movie_class <- read.csv("~/Desktop/Mac_Code/STAT_456/stat456-Movie-project/data/10k_pre-2010-01-01-w-llm-classification.csv")
+
+
+llm_movie_class <- llm_movie_class %>%
+  distinct(title, .keep_all = TRUE)
+```
+
+
+# join data sets by title keeping everything for now
+```{r}
+full_movie_data <- tmdb_5000 %>%
+  full_join(llm_movie_class, by = "title")
+```
+
+
+
+# select variables I want to keeep
+```{r}
+full_movie_data <- full_movie_data %>%
+  select(adult, keywords, overview.y, release_date.y, genres, title, llm_class_final)
+
+
+```
+
+
+# filter out NA's
+```{r}
+clean_data <- full_movie_data %>%
+  filter(!is.na(keywords) & !is.na(llm_class_final))
+
+```
+
+# rename variables tainted in join
+```{r}
+library(janitor)
+
+clean_data <- clean_data %>%
+  rename(
+    overview = overview.y,
+    release_date = release_date.y,
+    cult_classic = llm_class_final
+  ) %>%
+  clean_names()   
+```
+
+# Parse the JSON functions
+```{r}
+parse_json_list <- function(x) {
+  if (is.na(x) || x == "[]" || x == "") return(NA)
+
+  # Convert escaped quotes \" to actual "
+  x_fixed <- gsub('\\"', '"', x)
+
+  # Parse JSON safely
+  out <- tryCatch({
+    jsonlite::fromJSON(x_fixed)$name
+  }, error = function(e) NA)
+
+  return(out)
+}
+
+
+```
+
+# add to function
+```{r}
+movies_clean <- clean_data %>%
+  mutate(
+    genres_list = map(genres, parse_json_list),
+    keywords_list = map(keywords, parse_json_list)
+  )
+
+```
+
+
+
+
+```{r}
+movies_clean$keywords_list[1:5]
+
+```
+
+
+# Parse the JSON formats for keywords and Genres
+```{r}
+movies_clean <- clean_data %>%
+  mutate(
+    genres_list   = map(genres, clean_and_parse),
+    keywords_list = map(keywords, clean_and_parse)
+  )
+
+```
+
+
+
+
+# count common genres 
+```{r}
+movies_clean %>%
+  unnest(genres_list) %>%
+  count(genres_list, sort = TRUE)
+
+```
+# count keywords
+```{r}
+movies_clean %>%
+  unnest(keywords_list) %>%
+  count(keywords_list, sort = TRUE)
+
+```
+
+for cult classics 
+```{r}
+movies_clean %>%
+  filter(cult_classic == 1) %>%
+  unnest(genres_list) %>%
+  count(genres_list, sort = TRUE)
+
+```
+
+```{r}
+cult_keywords <- movies_clean %>%
+  filter(cult_classic == 1) %>%
+  unnest(keywords_list) %>%
+  count(keywords_list, sort = TRUE)
+
+
+print(cult_keywords)
+```
+
+
+
+
+
+
+
+
+
+
+```{r}
+genre_cult_heatmap <- movies_clean %>%
+  unnest(genres_list) %>%
+  count(genres_list, cult_classic) %>%
+  mutate(cult_classic = ifelse(cult_classic == 1, "Cult", "Not Cult"))
+
+ggplot(genre_cult_heatmap, aes(x = cult_classic, y = genres_list, fill = n)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "white", high = "red") +
+  labs(title = "Genre Frequency: Cult vs. Non-Cult Classics",
+       x = "Movie Type", y = "Genre", fill = "Count") +
+  theme_minimal(base_size = 14)
+
+```
+
+
+
+
+
+```{r}
+top_cult_keywords <- movies_clean %>%
+  filter(cult_classic == 1) %>%
+  unnest(keywords_list) %>%
+  count(keywords_list, sort = TRUE) %>%
+  slice_max(n, n = 25)
+
+ggplot(top_cult_keywords, aes(
+  x = reorder(keywords_list, n), y = n, fill = n
+)) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_gradient(low = "skyblue", high = "darkblue") +
+  theme_minimal() +
+  labs(
+    title = "Top 25 Keywords Among Cult Classics",
+    x = "Keyword",
+    y = "Count"
+  )
+
+```
+
+
