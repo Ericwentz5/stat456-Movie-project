@@ -98,6 +98,12 @@ movies_10k_verification <- movies_10k_verification %>% left_join(movies_10k_w_ll
 movies_10k_verification <- movies_10k_verification %>% select(-ends_with(".y"))
 
 # write.csv(movies_10k_verification, "../data/raw/movies_10k_verification")
+
+movies_10k_verification_check <- movies_10k_verification %>% filter(manual_class != llm_class_final)
+
+library(janitor)
+
+table(movies_10k_verification$llm_class_final, movies_10k_verification$manual_class)
 ```
 
 
