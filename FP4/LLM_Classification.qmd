@@ -60,10 +60,12 @@ library(patchwork)
 # table(movies_10k_w_llm$llm_sum)
 
 # Save results
-# write.csv(movies_10k_w_llm, "data/raw/10k_pre-2010-01-01-w-llm-classification.csv")
+# write.csv(movies_10k_w_llm, "../data/raw/10k_pre-2010-01-01-w-llm-classification.csv")
 ```
 ### Manual Verification of a sample of LLM classifications
 ```{r}
+movies_10k_w_llm <- read.csv("../data/raw/10k_pre-2010-01-01-w-llm-classification.csv")
+
 movies_10k_blind <- movies_10k_w_llm %>% select(-c(llm_class_1, llm_class_2, llm_class_3, llm_class_4, llm_class_5, llm_sum, llm_class_final))
 
 movies_10k_blind_sample <- movies_10k_blind %>% 
@@ -94,6 +96,8 @@ movies_10k_verification <- movies_10k_blind_sample %>%
 movies_10k_verification <- movies_10k_verification %>% left_join(movies_10k_w_llm, by = "imdb_id")
 
 movies_10k_verification <- movies_10k_verification %>% select(-ends_with(".y"))
+
+# write.csv(movies_10k_verification, "../data/raw/movies_10k_verification")
 ```
 
 
