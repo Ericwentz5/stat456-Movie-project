@@ -62,6 +62,42 @@ library(patchwork)
 # Save results
 # write.csv(movies_10k_w_llm, "data/raw/10k_pre-2010-01-01-w-llm-classification.csv")
 ```
+### Manual Verification of a sample of LLM classifications
+```{r}
+movies_10k_blind <- movies_10k_w_llm %>% select(-c(llm_class_1, llm_class_2, llm_class_3, llm_class_4, llm_class_5, llm_sum, llm_class_final))
+
+movies_10k_blind_sample <- movies_10k_blind %>% 
+  slice_sample(n = 50)
+
+manual_classifications <- c(0,0,1,0,0,0,0,1,1,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,1,0,1,0,1,0,0,1,1,0,1,0,0,1,0,0,0,1,0,1,1,0,0,0,1,0)
+# 2=unsure
+manual_classifications_uncertain <- c(0,0,1,2,2,2,0,1,1,0,0,1,0,0,0,0,2,0,1,1,0,0,2,0,1,0,1,0,1,0,2,2,2,0,2,0,2,1,0,0,0,2,0,1,1,2,0,0,1,0)
+# types of things im ruling out:
+# classic classics, broad appeal, successful, universally well received
+# bland, lack of unique qualities or niche appeal
+# lack of longevity, it needs to stay in the culture! (or return into it)
+
+# pro-cult qualities:
+# so bad its good
+# connection to another classic (soldier to blade runner)
+
+# two types of cult classics:
+# disparaged by audiences and critics upon release (maybe controversial, misunderstood, ahead of its time) but now widely loved
+# still heavily divided/either hate it or loved it. examples: freddy got fingered, the cat in the hat
+
+movies_10k_verification <- movies_10k_blind_sample %>%
+  mutate(
+    manual_class = manual_classifications,
+    manual_class_uncertain = manual_classifications_uncertain
+  )
+
+movies_10k_verification <- movies_10k_verification %>% left_join(movies_10k_w_llm, by = "imdb_id")
+
+movies_10k_verification <- movies_10k_verification %>% select(-ends_with(".y"))
+```
+
+
+
 
 
 ### Visualized Characteristics of These Two Classification Groups
