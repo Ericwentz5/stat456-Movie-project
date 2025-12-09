@@ -14,8 +14,9 @@ library(fastDummies)
 
 imdb <- read_tsv("data/raw/title.basics.tsv")
 movies_10k_w_llm <- read_csv("data/raw/10k_pre-2010-01-01-w-llm-classification.csv")
+top_movies <- read_csv("data/top_10000_movies.csv")
 ```
-
+# Training logit model
 ```{r message=FALSE}
 unique(imdb$titleType)
 
@@ -35,8 +36,8 @@ imdb <- imdb %>%
 # combining imdb and tmdb data
 combined_movies <- movies_10k_w_llm %>% mutate(tconst = imdb_id) %>% left_join(imdb, by = "tconst")
 
-# remove movies with na for genre1
-combined_movies_filtered <- combined_movies %>% filter(!is.na(genre1))
+# remove movies with na for genre1 and add roi
+combined_movies_filtered <- combined_movies %>% filter(!is.na(genre1)) %>% mutate(roi = revenue/budget)
 
 unique(combined_movies_filtered$genre1)
 
@@ -51,18 +52,87 @@ combined_movies_filtered$genre1 <- factor(combined_movies_filtered$genre1,
 combined_movies_filtered <- combined_movies_filtered %>%
   fastDummies::dummy_cols(select_columns = "genre1", remove_first_dummy = FALSE)
 
-
-# logistic Regression to see test genres
-model_logit <- glm(llm_class_final ~ vote_average + popularity + budget + revenue + runtime + genre1_Drama + genre1_Crime + genre1_Biography + genre1_Adventure + genre1_Action + genre1_Animation + genre1_Comedy + genre1_Horror + genre1_Mystery + genre1_Western + genre1_Fantasy + genre1_Thriller + `genre1_Sci-Fi` + genre1_Romance + `genre1_Film-Noir` + genre1_Family + genre1_Musical + genre1_Documentary,
-                   data = combined_movies_filtered,
-                   family = binomial)
-summary(model_logit)
-
-model_logit <- glm(
-  llm_class_final ~ vote_average + popularity + budget + revenue + runtime + genre1,
+# logistic Regression to see genres
+model_logit1 <- glm(
+  llm_class_final ~ vote_average + popularity + log(roi) + runtime + genre1,
   data = combined_movies_filtered,
   family = binomial
 )
 
-# some genre dummies are significant but others arent
+summary(model_logit1)
+
+table(combined_movies_filtered$genre1)
+
+# logistics regression with onle genres that are significant and have suitable sample size
+model_logit2 <- glm(llm_class_final ~ vote_average + popularity + log(budget) + log(roi) + runtime + genre1_Biography + genre1_Action + genre1_Comedy + genre1_Horror + genre1_Fantasy,
+                   data = combined_movies_filtered,
+                   family = binomial)
+summary(model_logit2)
+
+# including log(budget) biases toward found footage/horror movies
 ```
+
+# Predicting with logit model
+```{r}
+top_movies <- top_movies %>%
+  left_join(imdb, by = c("imdb_id" = "tconst"))
+
+# filter out training data and also movie released in past 6 months
+top_movies_post2009 <- top_movies %>%
+  filter(release_date >= as.Date("2010-01-01"), release_date < as.Date("2025-04-01"), budget > 10, revenue > 10) %>%
+  mutate(roi = revenue/budget) %>%
+  mutate(
+    log_budget = log(budget + 1),
+    log_roi = log(roi + 1)
+  )
+
+top_movies_post2009$genre1 <- factor(top_movies_post2009$genre1, levels = all_genres)
+
+top_movies_post2009 <- top_movies_post2009 %>%
+  fastDummies::dummy_cols(select_columns = "genre1", remove_first_dummy = FALSE)
+
+top_movies_post2009_preds <- top_movies_post2009 %>%
+  mutate(
+    pred_prob_logit = predict(model_logit2, newdata = ., type = "response"),
+    pred_class_logit = if_else(pred_prob_logit >= 0.5, 1, 0)
+  )
+
+vif(model_logit2)
+```
+
+# Random forest
+```{r}
+library(randomForest)
+combined_movies_filtered$llm_class_final <- as.factor(combined_movies_filtered$llm_class_final)
+
+combined_movies_filtered <- combined_movies_filtered %>%
+  mutate(
+    log_budget = log(budget + 1),
+    log_roi = log(roi + 1)
+  )
+
+rf_model <- randomForest(
+  llm_class_final ~ vote_average + popularity + log_budget + log_roi + runtime + genre1_Biography + genre1_Action + genre1_Comedy + genre1_Horror + genre1_Fantasy,
+  data = combined_movies_filtered,
+  ntree = 500,
+  mtry = 4
+)
+
+rf_model
+
+# evaluate
+importance(rf_model)
+varImpPlot(rf_model)
+
+# predict
+top_movies_post2009_preds$pred_prob_rf <- predict(rf_model, top_movies_post2009, type = "prob")[,2]
+top_movies_post2009_preds$pred_class_rf <- ifelse(top_movies_post2009$pred_prob_rf > 0.5, 1, 0)
+
+
+# combine models
+top_movies_post2009_preds <- top_movies_post2009_preds %>% mutate(model_average = (pred_prob_logit + pred_prob_rf)/2)
+```
+
+
+
+
