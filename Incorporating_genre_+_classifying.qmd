@@ -11,11 +11,17 @@ library(dplyr)
 library(tibble)
 library(patchwork)
 library(fastDummies)
+library(caret)
+library(pROC)
+library(randomForest)
+library(car)
 
 imdb <- read_tsv("data/raw/title.basics.tsv")
 movies_10k_w_llm <- read_csv("data/raw/10k_pre-2010-01-01-w-llm-classification.csv")
 top_movies <- read_csv("data/top_10000_movies.csv")
 ```
+
+
 # Training logit model
 ```{r message=FALSE}
 unique(imdb$titleType)
@@ -63,7 +69,7 @@ summary(model_logit1)
 
 table(combined_movies_filtered$genre1)
 
-# logistics regression with onle genres that are significant and have suitable sample size
+# logistics regression with only genres that are significant and have suitable sample size
 model_logit2 <- glm(llm_class_final ~ vote_average + popularity + log(budget) + log(roi) + runtime + genre1_Biography + genre1_Action + genre1_Comedy + genre1_Horror + genre1_Fantasy,
                    data = combined_movies_filtered,
                    family = binomial)
@@ -71,6 +77,41 @@ summary(model_logit2)
 
 # including log(budget) biases toward found footage/horror movies
 ```
+
+# Testing logit prediction on 30% of training data before new data
+```{r}
+# set seed for reproducibility
+set.seed(123)
+
+# create index (e.g., 70% train / 30% test)
+train_idx <- createDataPartition(
+  combined_movies_filtered$llm_class_final,
+  p = 0.7,
+  list = FALSE
+)
+
+# bisecting data
+train_data <- combined_movies_filtered[train_idx, ]
+test_data  <- combined_movies_filtered[-train_idx, ]
+
+# checking balance
+prop.table(table(train_data$llm_class_final))
+prop.table(table(test_data$llm_class_final))
+
+# train logit model with training data
+logit_train <- glm(llm_class_final ~ vote_average + popularity + log(budget) + log(roi) + runtime + genre1_Biography + genre1_Action + genre1_Comedy + genre1_Horror + genre1_Fantasy, 
+                   data = train_data, 
+                   family = binomial)
+summary(logit_train)
+
+# predict logit on test set
+test_data <- test_data %>%
+  mutate(
+    pred_prob_logit = predict(logit_train, newdata = ., type = "response"),
+    pred_class_logit = if_else(pred_prob_logit >= 0.351, 1, 0)
+  )
+```
+
 
 # Predicting with logit model
 ```{r}
@@ -94,15 +135,84 @@ top_movies_post2009 <- top_movies_post2009 %>%
 top_movies_post2009_preds <- top_movies_post2009 %>%
   mutate(
     pred_prob_logit = predict(model_logit2, newdata = ., type = "response"),
-    pred_class_logit = if_else(pred_prob_logit >= 0.5, 1, 0)
+    pred_class_logit = if_else(pred_prob_logit >= 0.351, 1, 0)
   )
 
 vif(model_logit2)
 ```
 
+# Testing rf prediction on 30% of training data before new data
+```{r}
+train_data$llm_class_final <- as.factor(train_data$llm_class_final)
+test_data$llm_class_final  <- as.factor(test_data$llm_class_final)
+
+train_data <- train_data %>%
+mutate(
+    log_budget = log(budget + 1),
+    log_roi = log(roi + 1)
+  )
+
+test_data <- test_data %>%
+mutate(
+    log_budget = log(budget + 1),
+    log_roi = log(roi + 1)
+  )
+
+rf_train <- randomForest(
+  llm_class_final ~ vote_average + popularity + log_budget + log_roi +
+    runtime + genre1_Biography + genre1_Action + genre1_Comedy +
+    genre1_Horror + genre1_Fantasy,
+  data = train_data,
+  ntree = 500,
+  mtry = 4
+)
+
+test_data$pred_prob_rf <- predict(
+  rf_train,
+  newdata = test_data,
+  type = "prob"
+)[, 2]
+
+test_data$pred_class_rf <- if_else(test_data$pred_prob_rf >= 0.351, 1, 0)
+
+# evaluate models
+confusionMatrix(
+  factor(test_data$pred_class_logit),
+  factor(test_data$llm_class_final)
+)
+
+confusionMatrix(
+  factor(test_data$pred_class_rf),
+  factor(test_data$llm_class_final)
+)
+
+roc_logit <- roc(test_data$llm_class_final, test_data$pred_prob_logit)
+roc_rf    <- roc(test_data$llm_class_final, test_data$pred_prob_rf)
+
+auc(roc_logit)
+auc(roc_rf)
+
+# ensemble model
+test_data <- test_data %>%
+  mutate(
+    pred_prob_ensemble = (pred_prob_logit + pred_prob_rf) / 2,
+    pred_class_ensemble = if_else(pred_prob_ensemble >= 0.351, 1, 0)
+  )
+
+confusionMatrix(
+  factor(test_data$pred_class_ensemble),
+  factor(test_data$llm_class_final)
+)
+
+roc_ens <- roc(test_data$llm_class_final, test_data$pred_prob_ensemble)
+auc(roc_ens)
+
+coords(roc_rf, "best", ret = "threshold")
+```
+
+
 # Random forest
 ```{r}
-library(randomForest)
 combined_movies_filtered$llm_class_final <- as.factor(combined_movies_filtered$llm_class_final)
 
 combined_movies_filtered <- combined_movies_filtered %>%
@@ -126,13 +236,137 @@ varImpPlot(rf_model)
 
 # predict
 top_movies_post2009_preds$pred_prob_rf <- predict(rf_model, top_movies_post2009, type = "prob")[,2]
-top_movies_post2009_preds$pred_class_rf <- ifelse(top_movies_post2009$pred_prob_rf > 0.5, 1, 0)
+top_movies_post2009_preds$pred_class_rf <- if_else(top_movies_post2009_preds$pred_prob_rf > 0.351, 1, 0)
 
 
-# combine models
-top_movies_post2009_preds <- top_movies_post2009_preds %>% mutate(model_average = (pred_prob_logit + pred_prob_rf)/2)
+# ensemble model
+top_movies_post2009_preds <- top_movies_post2009_preds %>% mutate(ensemble_prob = (pred_prob_logit + pred_prob_rf)/2)
+top_movies_post2009_preds$ensemble_class <- if_else(top_movies_post2009_preds$ensemble_prob > 0.351, 1, 0)
+
+
+# also include key model selection stats and confusion matrix
+# also include clean mean model probably latex
+# also include confusion matrix for manual verification
+
+top_movies_post2009_preds_nohorror <- top_movies_post2009_preds %>% filter(genre1_Horror == 0)
+```
+
+# Visualizing results
+```{r}
+# cleaning data
+manual_titles <- c(
+  "What We Do in the Shadows",
+  "Bottoms",
+  "Shiva Baby",
+  "Avengers: Infinity War",
+  "The Holdovers",
+  "Portrait of a Lady on Fire",
+  "Good Time"
+)
+
+manual_rows <- top_movies_post2009_preds_nohorror %>%
+  filter(title %in% manual_titles) %>%
+  select(title, ensemble_prob, genre1, genre2)
+
+viz_data <- top_movies_post2009_preds_nohorror %>%
+  select(title, ensemble_prob, genre1, genre2) %>%
+  filter(!is.na(ensemble_prob)) %>%
+  arrange(desc(ensemble_prob))
+
+top_n  <- 10
+bottom_n <- 10
+
+viz_data <- bind_rows(
+  slice_head(viz_data, n = top_n),
+  slice_tail(viz_data, n = bottom_n),
+  manual_rows
+) %>%
+  distinct(title, .keep_all = TRUE) %>%   # prevent duplicates
+  mutate(
+    title = forcats::fct_reorder(title, ensemble_prob)
+  )
+
+# viz
+okabe_ito <- c(
+  "#E69F00", # orange
+  "#56B4E9", # sky blue
+  "#009E73", # bluish green
+  "#F0E442", # yellow
+  "#0072B2", # blue
+  "#CC79A7"  # reddish purple
+)
+
+final_plot <- ggplot(viz_data, aes(
+  x = ensemble_prob,
+  y = title,
+  color = genre1
+)) +
+  geom_point(size = 3) +
+  geom_vline(xintercept = 0.5, linetype = "dashed", alpha = 0.5) +
+  scale_color_manual(
+    values = okabe_ito,
+    name = "Primary Genre"
+  ) +
+  labs(
+    title = "Non-Horror Films with Highest and Lowest Predicted Cult Status + Notable Cases",
+    subtitle = "Based on Ensemble Model Predictions for Post-2009 Releases",
+    x = "Predicted Probability of Cult Status",
+    y = NULL
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "right",
+    panel.grid.major.y = element_blank()
+  )
+
+final_plot
+
+# write takeaways:
+# fitted mean model of llm_class_final ~ vote_average + popularity + log(budget) + log(roi) + runtime + genre1_Biography + genre1_Action + genre1_Comedy + genre1_Horror + genre1_Fantasy (will write this nicely in latex) with both a logit and random forest
+# withheld 30% of pre-2010 data from training to test models, random forest was marginally better but decided to utilize an ensemble model (average of both) for better prediction stability
+# talk about model selection/evaluation criteria: high AUC, decent kappa, good sensitivity and specificity
+# model heavily favors horror films due to the abundance of short, low budget found-footage style horror films with high ROIs
+# excluded primary genre=horror from final viz
+# takeaways: model dislikes biographies and adventure films, good at ignoring the box office hits, top films are mostly comedies, with quite a few comedy/horrors, many at the top do seem unconventional enough to become cult classics (heartbeats is about a french canadian love triangle, alps is a Greek psychological drama art film directed by Yorgos Lathimos (who has since gone on to direct very popular and well loved films like Poor Things and Bugonia), stiches is a comedy/horror killer clown movie), while others seem like generic comedy/romances or just unassuming
+# ones i added outside top/bottom 10: infinity war is a gut check/it had better be low, bottoms+good time+what we do in the shadows glad they got some type of score but expected higher, portrait of a lady on fire and holdovers have the qualities but are too popular and universally liked to be higher
+
+ggsave("seb_final_plot.png", plot = final_plot, width = 12, height = 5, bg = "white")
+
 ```
 
 
+# heatmap, probably wont use
+```{r}
+heatmap_data <- top_movies_post2009_preds %>%
+  filter(!is.na(genre1), !is.na(genre2)) %>%
+  mutate(
+    genre1 = factor(genre1, levels = sort(unique(genre1))),
+    genre2 = factor(genre2, levels = sort(unique(genre2)))
+  ) %>%
+  group_by(genre1, genre2) %>%
+  summarise(
+    mean_prob = mean(ensemble_prob, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  ) %>%
+  filter(n >= 10)
+
+ggplot(heatmap_data, aes(x = genre1, y = genre2, fill = mean_prob)) +
+  geom_tile(color = "white", linewidth = 0.3) +
+  scale_fill_viridis_c(
+    name = "Mean cult probability",
+    option = "magma",
+    limits = c(0, 1)
+  ) +
+  labs(
+    title = "Ensemble-Predicted Cult Status by Genre Combination",
+    subtitle = "Mean predicted probability (test set)",
+    x = "Primary genre",
+    y = "Secondary genre"
+  ) +
+  theme_minimal()
+
+top_movies_post2009_preds_popular <- top_movies_post2009_preds %>% filter(popularity > 25.5)
+```
 
 
