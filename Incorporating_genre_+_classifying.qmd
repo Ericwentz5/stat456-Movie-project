@@ -11,11 +11,15 @@ library(dplyr)
 library(tibble)
 library(patchwork)
 library(fastDummies)
+library(caret)
+library(pROC)
 
 imdb <- read_tsv("data/raw/title.basics.tsv")
 movies_10k_w_llm <- read_csv("data/raw/10k_pre-2010-01-01-w-llm-classification.csv")
 top_movies <- read_csv("data/top_10000_movies.csv")
 ```
+
+
 # Training logit model
 ```{r message=FALSE}
 unique(imdb$titleType)
@@ -63,7 +67,7 @@ summary(model_logit1)
 
 table(combined_movies_filtered$genre1)
 
-# logistics regression with onle genres that are significant and have suitable sample size
+# logistics regression with only genres that are significant and have suitable sample size
 model_logit2 <- glm(llm_class_final ~ vote_average + popularity + log(budget) + log(roi) + runtime + genre1_Biography + genre1_Action + genre1_Comedy + genre1_Horror + genre1_Fantasy,
                    data = combined_movies_filtered,
                    family = binomial)
@@ -71,6 +75,41 @@ summary(model_logit2)
 
 # including log(budget) biases toward found footage/horror movies
 ```
+
+# Testing logit prediction on 30% of training data before new data
+```{r}
+# set seed for reproducibility
+set.seed(123)
+
+# create index (e.g., 70% train / 30% test)
+train_idx <- createDataPartition(
+  combined_movies_filtered$llm_class_final,
+  p = 0.7,
+  list = FALSE
+)
+
+# bisecting data
+train_data <- combined_movies_filtered[train_idx, ]
+test_data  <- combined_movies_filtered[-train_idx, ]
+
+# checking balance
+prop.table(table(train_data$llm_class_final))
+prop.table(table(test_data$llm_class_final))
+
+# train logit model with training data
+logit_train <- glm(llm_class_final ~ vote_average + popularity + log(budget) + log(roi) + runtime + genre1_Biography + genre1_Action + genre1_Comedy + genre1_Horror + genre1_Fantasy, 
+                   data = train_data, 
+                   family = binomial)
+summary(logit_train)
+
+# predict logit on test set
+test_data <- test_data %>%
+  mutate(
+    pred_prob_logit = predict(logit_train, newdata = ., type = "response"),
+    pred_class_logit = if_else(pred_prob_logit >= 0.351, 1, 0)
+  )
+```
+
 
 # Predicting with logit model
 ```{r}
@@ -94,11 +133,69 @@ top_movies_post2009 <- top_movies_post2009 %>%
 top_movies_post2009_preds <- top_movies_post2009 %>%
   mutate(
     pred_prob_logit = predict(model_logit2, newdata = ., type = "response"),
-    pred_class_logit = if_else(pred_prob_logit >= 0.5, 1, 0)
+    pred_class_logit = if_else(pred_prob_logit >= 0.351, 1, 0)
   )
 
 vif(model_logit2)
 ```
+
+# Testing rf prediction on 30% of training data before new data
+```{r}
+train_data$llm_class_final <- as.factor(train_data$llm_class_final)
+test_data$llm_class_final  <- as.factor(test_data$llm_class_final)
+
+rf_train <- randomForest(
+  llm_class_final ~ vote_average + popularity + log_budget + log_roi +
+    runtime + genre1_Biography + genre1_Action + genre1_Comedy +
+    genre1_Horror + genre1_Fantasy,
+  data = train_data,
+  ntree = 500,
+  mtry = 4
+)
+
+test_data$pred_prob_rf <- predict(
+  rf_train,
+  newdata = test_data,
+  type = "prob"
+)[, 2]
+
+test_data$pred_class_rf <- if_else(test_data$pred_prob_rf >= 0.351, 1, 0)
+
+# evaluate models
+confusionMatrix(
+  factor(test_data$pred_class_logit),
+  factor(test_data$llm_class_final)
+)
+
+confusionMatrix(
+  factor(test_data$pred_class_rf),
+  factor(test_data$llm_class_final)
+)
+
+roc_logit <- roc(test_data$llm_class_final, test_data$pred_prob_logit)
+roc_rf    <- roc(test_data$llm_class_final, test_data$pred_prob_rf)
+
+auc(roc_logit)
+auc(roc_rf)
+
+# ensemble model
+test_data <- test_data %>%
+  mutate(
+    pred_prob_ensemble = (pred_prob_logit + pred_prob_rf) / 2,
+    pred_class_ensemble = if_else(pred_prob_ensemble >= 0.351, 1, 0)
+  )
+
+confusionMatrix(
+  factor(test_data$pred_class_ensemble),
+  factor(test_data$llm_class_final)
+)
+
+roc_ens <- roc(test_data$llm_class_final, test_data$pred_prob_ensemble)
+auc(roc_ens)
+
+coords(roc_rf, "best", ret = "threshold")
+```
+
 
 # Random forest
 ```{r}
@@ -126,11 +223,19 @@ varImpPlot(rf_model)
 
 # predict
 top_movies_post2009_preds$pred_prob_rf <- predict(rf_model, top_movies_post2009, type = "prob")[,2]
-top_movies_post2009_preds$pred_class_rf <- ifelse(top_movies_post2009$pred_prob_rf > 0.5, 1, 0)
+top_movies_post2009_preds$pred_class_rf <- if_else(top_movies_post2009_preds$pred_prob_rf > 0.351, 1, 0)
 
 
-# combine models
-top_movies_post2009_preds <- top_movies_post2009_preds %>% mutate(model_average = (pred_prob_logit + pred_prob_rf)/2)
+# ensemble model
+top_movies_post2009_preds <- top_movies_post2009_preds %>% mutate(ensemble_prob = (pred_prob_logit + pred_prob_rf)/2)
+top_movies_post2009_preds$ensemble_class <- if_else(top_movies_post2009_preds$ensemble_prob > 0.351, 1, 0)
+
+
+# for viz: labelled and faceted bar plot (?) of highest and lowest prob movies for each of the three models
+# also include key model selection stats and confusion matrix
+# also include clean mean model probably latex
+
+# also include confusion matrix for manual verification
 ```
 
 
