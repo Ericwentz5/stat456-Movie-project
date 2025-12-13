@@ -81,6 +81,8 @@ parse_json_list <- function(x) {
 
 # add to function
 ```{r}
+library(purrr)
+
 movies_clean <- clean_data %>%
   mutate(
     genres_list = map(genres, parse_json_list),
@@ -102,8 +104,8 @@ movies_clean$keywords_list[1:5]
 ```{r}
 movies_clean <- clean_data %>%
   mutate(
-    genres_list   = map(genres, clean_and_parse),
-    keywords_list = map(keywords, clean_and_parse)
+    genres_list   = map(genres, parse_json_list),
+    keywords_list = map(keywords, parse_json_list)
   )
 
 ```
@@ -113,6 +115,8 @@ movies_clean <- clean_data %>%
 
 # count common genres 
 ```{r}
+library(tidyverse)
+
 movies_clean %>%
   unnest(genres_list) %>%
   count(genres_list, sort = TRUE)
@@ -157,14 +161,16 @@ print(cult_keywords)
 ```{r}
 genre_cult_heatmap <- movies_clean %>%
   unnest(genres_list) %>%
-  count(genres_list, cult_classic) %>%
+  count(cult_classic, genres_list) %>%
+  group_by(cult_classic) %>%
+  mutate(prop = n / sum(n)) %>%
   mutate(cult_classic = ifelse(cult_classic == 1, "Cult", "Not Cult"))
 
-ggplot(genre_cult_heatmap, aes(x = cult_classic, y = genres_list, fill = n)) +
+ggplot(genre_cult_heatmap, aes(x = cult_classic, y = genres_list, fill = prop)) +
   geom_tile(color = "white") +
   scale_fill_gradient(low = "white", high = "red") +
-  labs(title = "Genre Frequency: Cult vs. Non-Cult Classics",
-       x = "Movie Type", y = "Genre", fill = "Count") +
+  labs(title = "Genre Proportions: Cult vs. Non-Cult Classics",
+       x = "Movie Type", y = "Genre", fill = "Proportion") +
   theme_minimal(base_size = 14)
 
 ```
