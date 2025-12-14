@@ -1,15 +1,19 @@
 # What Makes a Cult Classic?
 
-## AI USAGE STATEMENT 
-Generative AI (GPT-5.1 was used for syntax, brainstorming, and bullet point creation in the slides part. No full paragraph or code chunk generating was used and all queries were heavily revised if used
-
-
 
 This project explores what makes a movie a cult classic using a combination of
 movie metadata, keyword and genre analysis, large language model (LLM) labeling,
 and human-in-the-loop validation. Cult classics are subjective, culturally
 dependent, and difficult to define, making them a compelling case study for
 applying data science and AI to unstructured concepts.
+
+
+## AI USAGE STATEMENT 
+Generative AI (GPT-5.1 was used for syntax, brainstorming, and bullet point creation in the slides part. No full paragraph or code chunk generating was used and all queries were heavily revised if used
+
+
+
+
 
 ## Team
 - Eric Wentz
