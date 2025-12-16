@@ -9,9 +9,6 @@ editor: visual
 server: shiny
 ---
 
-
-## Libraries
-
 ```{r echo=FALSE}
 library(tidyverse)
 library(ggplot2)
@@ -364,8 +361,24 @@ p2 <- ggplot(curve_cum, aes(age, mean_cum_share, color = class)) +
 print(p2)
 ```
 
+[add Sebastian's code and interpretations]
 
+```{r}
 
+```
 
+So what makes a cult classic based on these results? A cult classic is most often a movie with strong identity cues, niche target appeal that makes it easy for fans to find community, and an attention curve that supports that community-building. The “recipe” is real in the sense that these signals cluster, but cult status stays partly intangible because it ultimately requires collective adoption over time, which is why our trajectory metrics and prediction work complement each other. They measure how cultness happens, not just what the film is.
+
+## Limitations
+
+A key limitation is that our “cult” outcome is only a placeholder for a social phenomenon that is partly cultural and community-driven. The LLM label (and therefore the model trained on it) may encode bias, especially toward horror or edgy keywords. And even after removing horror in one figure, the underlying signal can still privilege genres and tropes that sound cult-like rather than films that actually developed sustained fan communities. Similarly, our genre and keyword visuals summarize what’s common, but they don’t prove causation. Genres and themes correlate with cult status, yet they may just be markers of niche marketing or availability rather than the reason a fandom formed. The ratings trajectory app helps by introducing a time dimension, but it also has blind spots. Ratings volume reflects who is on the platform and when, and slow-burn could reflect streaming release timing, re-releases, awards, etc., not cult adoption per se. Finally, our visuals don’t directly measure the mechanisms people often associate with cult classics, such as public screening, quotability, online communities, controversy, or critical evaluation. So an open question is how much cult status is driven by social transmission and context versus the measurable content features we captured. These gaps point to next steps like validating labels against external lists, separating theatrical vs streaming eras, and adding signals for fandom activity to better distinguish true cult formation from general late popularity.
+
+## Contributions
+
+### Eric
+
+### Natalia
+
+### Sebastian
 
 
