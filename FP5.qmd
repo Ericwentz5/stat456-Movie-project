@@ -398,6 +398,8 @@ A key limitation is that our “cult” outcome is only a placeholder for a soci
 
 ### Eric
 
+led the analysis of genre- and keyword-based features used to characterize cult classic films. He was responsible for cleaning and structuring the nested genre and keyword data, developing the genre and keyword proportion heatmaps, and ensuring these analyses were reproducible through properly saved and loaded processed datasets. In addition to his analytical contributions, Eric coordinated and scheduled meetings with the external domain expert, helped streamline communication among team members, and translated group discussions into concrete analytical steps. He also contributed to multiple sections of the written report, refining methodological descriptions and results narratives to improve clarity and coherence.
+
 ### Natalia
 
 ### Sebastian
