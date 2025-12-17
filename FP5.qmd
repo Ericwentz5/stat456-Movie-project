@@ -9,7 +9,8 @@ editor: visual
 server: shiny
 ---
 
-```{r echo=FALSE}
+```{r}
+#| echo: false
 library(tidyverse)
 library(ggplot2)
 library(lubridate)
@@ -21,46 +22,66 @@ library(tibble)
 library(stringr)
 ```
 
+In a time when data science is often used to tackle heavy societal issues like healthcare, economics, climate, and inequality, we decided to take a different route. We wanted to remind ourselves that creativity and curiosity also have a place in analytics. We chose movies, a fun and creative domain, and approached them with a serious analytical mindset. Movies are inherently unquantifiable. Their interpretations are subjective, emotionally driven, and culturally dependent. To us, this is exactly what makes the challenge interesting. \\ \\ The differences in our project were not only in the questions we asked but also in the type of data we worked with. Our datasets involved messy concepts such as cult status, genre identity, and fandom behavior, which are very different from typical structured and numerical data. Our project sits at the intersection of AI, culture, and entertainment analytics. We followed standard data science practices such as data collection, cleaning, and visualization, and combined them with large language model based labeling to analyze a concept that does not naturally exist in structured form.\\ \\ Cult classics are films with particularly dedicated fanbases and cultural staying power. Throughout the semester, we aimed to determine first, if there are measurable characteristics that distinguish cult classics from other films, and secondly, whether or not we can measure them. This question is significant because existing scholarship on cult cinema largely emphasizes qualitative dimensions such as transgression, niche audiences, and subcultural identity, while offering limited quantitative analysis of film attributes (see Mathijs and Mendik, The Cult Film Reader). Since it did not previously exist, our first step was to create a cult status indicator variable with the assistance of generative AI, that would be the basis for our empirical investigation. The next phase of our project employed traditional data science methods to explore trends in thematic key words, genres, and popularity over time for cult and non-cult films. The last phase, rather ambitiously, implemented statistical machine learning tools to model and attempt to predict future cult status for recent films.\\ \\ \## Data
 
-In a time when data science is often used to tackle heavy societal issues like healthcare, economics, climate, and inequality, we decided to take a different route. We wanted to remind ourselves that creativity and curiosity also have a place in analytics. We chose movies, a fun and creative domain, and approached them with a serious analytical mindset. Movies are inherently unquantifiable. Their interpretations are subjective, emotionally driven, and culturally dependent. To us, this is exactly what makes the challenge interesting. \\
-\\
-The differences in our project were not only in the questions we asked but also in the type of data we worked with. Our datasets involved messy concepts such as cult status, genre identity, and fandom behavior, which are very different from typical structured and numerical data. Our project sits at the intersection of AI, culture, and entertainment analytics. We followed standard data science practices such as data collection, cleaning, and visualization, and combined them with large language model based labeling to analyze a concept that does not naturally exist in structured form.\\
-\\
-Cult classics are films with particularly dedicated fanbases and cultural staying power. Throughout the semester, we aimed to determine first, if there are measurable characteristics that distinguish cult classics from other films, and secondly, whether or not we can measure them. This question is significant because existing scholarship on cult cinema largely emphasizes qualitative dimensions such as transgression, niche audiences, and subcultural identity, while offering limited quantitative analysis of film attributes (see Mathijs and Mendik, The Cult Film Reader). Since it did not previously exist, our first step was to create a cult status indicator variable with the assistance of generative AI, that would be the basis for our empirical investigation. The next phase of our project employed traditional data science methods to explore trends in thematic key words, genres, and popularity over time for cult and non-cult films. The last phase, rather ambitiously, implemented statistical machine learning tools to model and attempt to predict future cult status for recent films.\\
-\\
-## Data
-
-We work with two main preexisting data sources: The Movie Database (TMDb) and the Internet Movie Database (IMDb). Our TMDb dataset contains one row per movie for the 10,000 highest rated films by TMDb user score and includes fields such as title, release date, budget, revenue, average vote, etc. We also attach an LLM-generated binary label (cult = 1/0) derived from a prompt-based cult score and a chosen threshold. Cleaning for TMDb focuses on standardizing identifiers and dates, removing duplicates, handling implicit missingness, and normalizing text fields, so titles match consistently across sources.\\
-\\
-IMDb provides two types of information that TMDb does not, audience activity over time and credit metadata. For ratings activity, we use an IMDb table for votes over time with fields like ID number, year, number of ratings, and a timestamp for each vote. This data powers our time series curves and the derived cult trajectory metrics. Cleaning on the IMDb side includes filtering to titles that appear in our TMDb list, coercing years to numeric, removing implausible years, aggregating multiple vote records to a single ID and year count when needed, and ensuring consistent ID formats. Finally, we join by matching cleaned titles and release years, then carry the IMDb/TMDb IDs forward so all downstream modeling and visualizations use a single consistent movie identifier.\\
-\\
-As touched on in the introduction, there is not an indicator of cult status in any publicly available data. Since our goal was to explore and model characteristics of cult films, we needed a dependent variable. To remedy this we used the OpenAI API  to feed chatgpt-4.1-mini the title and release date of all films in our dataset released before 2010 and asked for the structured output of a cult 1/0 indicator variable. To stabilize the variability inherent in generative AI responses, we ran the query five times with the same prompt, and selected films identified as cult classics in at least four out of five queries as what we would consider cult films.
+We work with two main preexisting data sources: The Movie Database (TMDb) and the Internet Movie Database (IMDb). Our TMDb dataset contains one row per movie for the 10,000 highest rated films by TMDb user score and includes fields such as title, release date, budget, revenue, average vote, etc. We also attach an LLM-generated binary label (cult = 1/0) derived from a prompt-based cult score and a chosen threshold. Cleaning for TMDb focuses on standardizing identifiers and dates, removing duplicates, handling implicit missingness, and normalizing text fields, so titles match consistently across sources.\\ \\ IMDb provides two types of information that TMDb does not, audience activity over time and credit metadata. For ratings activity, we use an IMDb table for votes over time with fields like ID number, year, number of ratings, and a timestamp for each vote. This data powers our time series curves and the derived cult trajectory metrics. Cleaning on the IMDb side includes filtering to titles that appear in our TMDb list, coercing years to numeric, removing implausible years, aggregating multiple vote records to a single ID and year count when needed, and ensuring consistent ID formats. Finally, we join by matching cleaned titles and release years, then carry the IMDb/TMDb IDs forward so all downstream modeling and visualizations use a single consistent movie identifier.\\ \\ As touched on in the introduction, there is not an indicator of cult status in any publicly available data. Since our goal was to explore and model characteristics of cult films, we needed a dependent variable. To remedy this we used the OpenAI API to feed chatgpt-4.1-mini the title and release date of all films in our dataset released before 2010 and asked for the structured output of a cult 1/0 indicator variable. To stabilize the variability inherent in generative AI responses, we ran the query five times with the same prompt, and selected films identified as cult classics in at least four out of five queries as what we would consider cult films.
 
 ```{r}
+#| echo: false
 movies_w_index <- read.csv("~/Documents/COMP 456/data/10k_pre-2010-01-01-w-llm-classification.csv")
 ratings_df <- read.csv("~/Documents/COMP 456/FP4/ml-32m/ratings.csv")
 movies_df <- read.csv("~/Documents/COMP 456/FP4/ml-32m/movies.csv")
 ```
 
-
 ## Processes and outcomes
 
-Our main question, “what makes a movie a cult classic?”, ended up being less about a single “secret ingredient” and more about a handful of measurable signals that often come together: what the movie is like, who it seems made for, and how audiences find it over time. Across the results, the strongest pattern is that cult status tends to emerge when a film is distinctive enough to attract a specific audience, and that audience has reasons to keep returning to it and recommending it.\\
-\\
-Two descriptive visuals capture the content signature of cult films: the genre-proportion heatmap and the top keywords bar chart. In the heatmap, the cult-column is visibly darker for Horror, Thriller, and Comedy, while the non-cult absence column is dominated by Drama, a more mainstream “default” genre bucket. The very slight presence of Animation, Family, and War among cult classics is also notable, suggesting that in this dataset cult status rarely forms around films that are either aimed at a broader audience or tied to conventional prestige or historical framing. While genre alone does not define cult status,  there is certainly correlation. \\
-\\
-[insert Eric's code for visualizations]
+Our main question, “what makes a movie a cult classic?”, ended up being less about a single “secret ingredient” and more about a handful of measurable signals that often come together: what the movie is like, who it seems made for, and how audiences find it over time. Across the results, the strongest pattern is that cult status tends to emerge when a film is distinctive enough to attract a specific audience, and that audience has reasons to keep returning to it and recommending it.\\ \\ Two descriptive visuals capture the content signature of cult films: the genre-proportion heatmap and the top keywords bar chart. In the heatmap, the cult-column is visibly darker for Horror, Thriller, and Comedy, while the non-cult absence column is dominated by Drama, a more mainstream “default” genre bucket. The very slight presence of Animation, Family, and War among cult classics is also notable, suggesting that in this dataset cult status rarely forms around films that are either aimed at a broader audience or tied to conventional prestige or historical framing. While genre alone does not define cult status, there is certainly correlation. \\ \\ \[insert Eric's code for visualizations\]
+
 ```{r}
+#| echo: false
+
+movies_clean <- readRDS("~/Desktop/Mac_Code/STAT_456/stat456-Movie-project/data/movies_clean.rds")
+
+genre_cult_heatmap <- movies_clean %>%
+  unnest(genres_list) %>%
+  count(cult_classic, genres_list) %>%
+  group_by(cult_classic) %>%
+  mutate(prop = n / sum(n)) %>%
+  mutate(cult_classic = ifelse(cult_classic == 1, "Cult", "Not Cult"))
+
+ggplot(genre_cult_heatmap, aes(x = cult_classic, y = genres_list, fill = prop)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "white", high = "red") +
+  labs(title = "Genre Proportions: Cult vs. Non-Cult Classics",
+       x = "Movie Type", y = "Genre", fill = "Proportion") +
+  theme_minimal(base_size = 14)
+
+top_cult_keywords <- movies_clean %>%
+  filter(cult_classic == 1) %>%
+  unnest(keywords_list) %>%
+  count(keywords_list, sort = TRUE) %>%
+  slice_max(n, n = 25)
+
+ggplot(top_cult_keywords, aes(
+  x = reorder(keywords_list, n), y = n, fill = n
+)) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_gradient(low = "skyblue", high = "darkblue") +
+  theme_minimal() +
+  labs(
+    title = "Top 25 Keywords Among Cult Classics",
+    x = "Keyword",
+    y = "Count"
+  )
+
 
 ```
 
-The keyword chart shows how cult films differ within or alongside genres. The most common keywords cluster around dark, transgressive, or subcultural themes. Importantly, some keywords aren’t just themes, they are signals of style and structure, like a stinger during or after credits, which point to films that reward insider viewing habits. The broader trend here is that cult classics aren’t just “good movies people like”, but they are often movies with strong identity markers that make it easy for fans to rally around and recommend to other fans.\\
-\\
-These visuals also imply why cult status can feel intangible. Our measured features capture what is on screen, but cult status also depends on social transmission, viewing rituals, and timing. \\
-\\
-The Shiny app turns “cultness” into a time-shape question by plotting ratings volume by year and extracting four metrics: time to takeoff, peak-lag, long tail ratio, and decay half-life. These are measurable ways to separate at least two subtypes. For slow-burning or rediscovery cults, the movie attracts more sustained attention later than right after release. Even if a film isn’t “cult” in the stereotypical sense, the trajectory illustrates the mechanism. A title can become culturally sticky through discovery years later and ongoing recommendation rather than a launch spike. On the other hand, for mainstream movies with spike patterns, attention concentrates near their release and quickly decays. That shape is consistent with movies that are widely seen when new then fade as the next big release arrives.
+The keyword chart shows how cult films differ within or alongside genres. The most common keywords cluster around dark, transgressive, or subcultural themes. Importantly, some keywords aren’t just themes, they are signals of style and structure, like a stinger during or after credits, which point to films that reward insider viewing habits. The broader trend here is that cult classics aren’t just “good movies people like”, but they are often movies with strong identity markers that make it easy for fans to rally around and recommend to other fans.\\ \\ These visuals also imply why cult status can feel intangible. Our measured features capture what is on screen, but cult status also depends on social transmission, viewing rituals, and timing. \\ \\ The Shiny app turns “cultness” into a time-shape question by plotting ratings volume by year and extracting four metrics: time to takeoff, peak-lag, long tail ratio, and decay half-life. These are measurable ways to separate at least two subtypes. For slow-burning or rediscovery cults, the movie attracts more sustained attention later than right after release. Even if a film isn’t “cult” in the stereotypical sense, the trajectory illustrates the mechanism. A title can become culturally sticky through discovery years later and ongoing recommendation rather than a launch spike. On the other hand, for mainstream movies with spike patterns, attention concentrates near their release and quickly decays. That shape is consistent with movies that are widely seen when new then fade as the next big release arrives.
 
 ```{r}
+#| echo: false
 # Extracts the release year from a title like "Movie (1999)"
 release_year_from_title <- function(title_chr) {
   y <- stringr::str_match(title_chr, ".*\\((\\d{4})\\)")[, 2]
@@ -253,6 +274,7 @@ shinyApp(ui, server)
 These two plots scale up the Shiny-app idea from single movies to the whole dataset by summarizing the typical ratings trajectory for cult vs. non-cult films. In the first figure, we align every movie by years since release and convert yearly rating counts into the share of that film’s lifetime ratings, so the comparison is about shape and timing rather than raw popularity. The result is a clear split: non-cult films are more front-loaded, with a sharp spike in the first 1–2 years and then a gradual decline, consistent with mainstream release cycles and early mass attention. Cult classics, in contrast, show a smaller initial spike but relatively higher activity later, especially in the mid-life window (roughly years 5–15) and a subtle late lift, suggesting a longer “afterlife” driven by rediscovery, niche communities, and repeated recommendation rather than a single launch moment.
 
 ```{r}
+#| echo: false
 # Ratings with timestamps
 ratings_clean <- ratings_df %>%
   transmute(
@@ -332,8 +354,8 @@ t50_median <- t50_by_film %>%
   summarise(median_T50 = median(T50, na.rm = TRUE), .groups = "drop")
 ```
 
-
 ```{r}
+#| echo: false
 p1 <- ggplot(curve_share, aes(age, mean_share, color = class)) +
   geom_line(linewidth = 1) +
   #geom_smooth(se = FALSE, method = "loess", span = 0.5, linewidth = 0.8) +
@@ -344,7 +366,6 @@ p1 <- ggplot(curve_share, aes(age, mean_share, color = class)) +
 
 print(p1)
 ```
-
 
 The second figure makes that timing difference even easier to interpret by tracking how quickly ratings accumulate over a film’s life. The dashed vertical lines mark T50, the time it takes the average film to reach 50% of its lifetime ratings. Here, the non-cult curve reaches the halfway point earlier, while the cult curve hits T50 later, meaning cult attention builds more gradually over time. Together, these visuals reinforce the central pattern behind our curve metrics: cult classics are less dominated by early release period attention and more defined by a long tail / slow-burn accumulation, which matches what the Shiny app shows at the individual movie level, just averaged across thousands of titles. Because everything is expressed in shares and within a capped 0–20 year window, the takeaway is explicitly about relative timing, not absolute “how popular” a movie is.
 
@@ -361,7 +382,7 @@ p2 <- ggplot(curve_cum, aes(age, mean_cum_share, color = class)) +
 print(p2)
 ```
 
-[add Sebastian's code and interpretations]
+\[add Sebastian's code and interpretations\]
 
 ```{r}
 
@@ -380,5 +401,3 @@ A key limitation is that our “cult” outcome is only a placeholder for a soci
 ### Natalia
 
 ### Sebastian
-
-
