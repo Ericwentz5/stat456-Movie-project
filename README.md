@@ -17,7 +17,7 @@ Generative AI (GPT-5.1 was used for syntax, brainstorming, and bullet point crea
 
 ## Team
 - Eric Wentz
-- Natalia [Last Name]
+- Natalia Morales Flores
 - Sebastian [Last Name]
 
 ---
