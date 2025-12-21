@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.353">
+<meta name="generator" content="quarto-1.6.42">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -30,10 +30,10 @@ ul.task-list li input[type="checkbox"] {
 <script src="FP5_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="FP5_files/libs/quarto-html/anchor.min.js"></script>
 <link href="FP5_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="FP5_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="FP5_files/libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="FP5_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="FP5_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="FP5_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="FP5_files/libs/bootstrap/bootstrap-c0367b04c37547644fece4185067e4a7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
@@ -65,7 +65,9 @@ ul.task-list li input[type="checkbox"] {
   </div>
   
 
+
 </header>
+
 
 <p>In a time when data science is often used to tackle heavy societal issues like healthcare, economics, climate, and inequality, we decided to take a different route. We wanted to remind ourselves that creativity and curiosity also have a place in analytics. We chose movies, a fun and creative domain, and approached them with a serious analytical mindset. Movies are inherently unquantifiable. Their interpretations are subjective, emotionally driven, and culturally dependent. To us, this is exactly what makes the challenge interesting. The differences in our project were not only in the questions we asked but also in the type of data we worked with. Our datasets involved messy concepts such as cult status, genre identity, and fandom behavior, which are very different from typical structured and numerical data. Our project sits at the intersection of AI, culture, and entertainment analytics. We followed standard data science practices such as data collection, cleaning, and visualization, and combined them with large language model based labeling to analyze a concept that does not naturally exist in structured form. <br> <br> Cult classics are films with particularly dedicated fanbases and cultural staying power. Throughout the semester, we aimed to determine first, if there are measurable characteristics that distinguish cult classics from other films, and secondly, whether or not we can measure them. This question is significant because existing scholarship on cult cinema largely emphasizes qualitative dimensions such as transgression, niche audiences, and subcultural identity, while offering limited quantitative analysis of film attributes (see Mathijs and Mendik, The Cult Film Reader). Since it did not previously exist, our first step was to create a cult status indicator variable with the assistance of generative AI, that would be the basis for our empirical investigation. The next phase of our project employed traditional data science methods to explore trends in thematic key words, genres, and popularity over time for cult and non-cult films. The last phase, rather ambitiously, implemented statistical machine learning tools to model and attempt to predict future cult status for recent films.</p>
 <section id="data" class="level2">
@@ -75,27 +77,25 @@ ul.task-list li input[type="checkbox"] {
 <section id="processes-and-outcomes" class="level2">
 <h2 class="anchored" data-anchor-id="processes-and-outcomes">Processes and outcomes</h2>
 <p>Our main question, “what makes a movie a cult classic?”, ended up being less about a single “secret ingredient” and more about a handful of measurable signals that often come together: what the movie is like, who it seems made for, and how audiences find it over time. Across the results, the strongest pattern is that cult status tends to emerge when a film is distinctive enough to attract a specific audience, and that audience has reasons to keep returning to it and recommending it. <br> <br> Two descriptive visuals capture the content signature of cult films: the genre-proportion heatmap and the top keywords bar chart. In the heatmap, the cult-column is visibly darker for Horror, Thriller, and Comedy, while the non-cult absence column is dominated by Drama, a more mainstream “default” genre bucket. The very slight presence of Animation, Family, and War among cult classics is also notable, suggesting that in this dataset cult status rarely forms around films that are either aimed at a broader audience or tied to conventional prestige or historical framing. While genre alone does not define cult status, there is certainly correlation.</p>
+<p><img src="final_images/genres.png" class="img-fluid"></p>
+<p><img src="final_images/keywords.png" class="img-fluid"></p>
 <p>The keyword chart shows how cult films differ within or alongside genres. The most common keywords cluster around dark, transgressive, or subcultural themes. Importantly, some keywords aren’t just themes, they are signals of style and structure, like a stinger during or after credits, which point to films that reward insider viewing habits. The broader trend here is that cult classics aren’t just “good movies people like”, but they are often movies with strong identity markers that make it easy for fans to rally around and recommend to other fans. <br> <br> These visuals also imply why cult status can feel intangible. Our measured features capture what is on screen, but cult status also depends on social transmission, viewing rituals, and timing. <br> <br> The Shiny app lets us treat “cultness” as something you can see in the shape of audience attention over time, not just in a genre label. For any selected movie, it plots ratings activity by year and overlays a smoothed curve, then summarizes that curve with four interpretable metrics: Time-to-takeoff (T₅₀), the number of years it takes to reach 50% of lifetime ratings; peak-lag, the time from release to the highest point of attention; a long-tail ratio comparing ratings in years 5–15 to ratings in years 0–2; and decay half-life, how quickly attention falls after the peak. Together, these metrics reveal at least two common “pathways” a film can take. Some titles look like slow-burn / rediscovery cases: they reach T₅₀ late, peak years after release, and have long-tail ratios above 1, meaning a substantial portion of attention arrives well after the initial release window—consistent with word-of-mouth spread, rewatching, streaming-era rediscovery, or fandom growth over time. In the Pride &amp; Prejudice (2005) example shown, the pattern is strongly late-life: T₅₀ = 11 years, peak-lag = 11 years, and a long-tail ratio ≈ 4.14, indicating that far more engagement happens years later than in the first two years. Other movies show the opposite mainstream spike profile: low T₅₀ and short peak-lag, with attention concentrated near release and then fading relatively quickly, which matches films that are heavily consumed during their initial marketing/theatrical moment. This time-horizon framing helps us move beyond “cult is a vibe” and toward measurable subtypes: even without explicitly modeling director reputation, the curves point to different mechanisms of visibility—launch-driven attention versus delayed, community-driven accumulation—that map closely onto how cult followings tend to form. <br></p>
 <blockquote class="blockquote">
 <p>The Shiny app is included as an external qmd located in the same folder as this file in the Github repository.</p>
 </blockquote>
 <p>These two plots scale up the Shiny-app idea from single movies to the whole dataset by summarizing the typical ratings trajectory for cult vs.&nbsp;non-cult films. <br> <br> In the first figure, we align every movie by years since release and convert yearly rating counts into the share of that film’s lifetime ratings, so the comparison is about shape and timing rather than raw popularity. The result is a clear split: non-cult films are more front-loaded, with a sharp spike in the first 1–2 years and then a gradual decline, consistent with mainstream release cycles and early mass attention. Cult classics, in contrast, show a smaller initial spike but relatively higher activity later, especially in the mid-life window (roughly years 5–15) and a subtle late lift, suggesting a longer “afterlife” driven by rediscovery, niche communities, and repeated recommendation rather than a single launch moment.</p>
-<div class="cell">
-<div class="cell-output-display">
-<p><img src="FP5_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
-</div>
-</div>
+<p><img src="final_images/typical_ratings.png" class="img-fluid"></p>
 <p>The second figure makes that timing difference even easier to interpret by tracking how quickly ratings accumulate over a film’s life. The dashed vertical lines mark T50, the time it takes the average film to reach 50% of its lifetime ratings. Here, the non-cult curve reaches the halfway point earlier, while the cult curve hits T50 later, meaning cult attention builds more gradually over time. Together, these visuals reinforce the central pattern behind our curve metrics: cult classics are less dominated by early release period attention and more defined by a long tail / slow-burn accumulation, which matches what the Shiny app shows at the individual movie level, just averaged across thousands of titles. Because everything is expressed in shares and within a capped 0–20 year window, the takeaway is explicitly about relative timing, not absolute “how popular” a movie is.</p>
-<div class="cell">
-<div class="cell-output-display">
-<p><img src="FP5_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="672"></p>
-</div>
-</div>
+<p><img src="final_images/cumulative_share.png" class="img-fluid"></p>
+<p>The final test of the quantifiability of cult classics is to model and predict. To generate an outcome variable for this modeling, we prompted the OpenAI API in RStudio using single-shot reasoning with a structured output. We fed the LLM the titles and release dates of all films in our dataset released before 2010 and asked for a binary cult classification. To account for the variability inherent in generative AI responses, we ran the same query five times and aggregated the results such that our final cult classification included films identified as cult classics in at least four out of five of the queries. We then performed human verification of the LLM classification by manually classifying a random sample of 50 films. The manual and LLM classifications aligned on 40 out of 50 of the selected films, but we found that most of the disagreement cases were not clear-cut and could have gone either way.</p>
+<p>Now confident in the LLM’s classifications, we proceeded to modeling. Our final mean model included average user scores, popularity, logged budget, logged return on investment (box office return divided by budget), runtime, and a vector of dummy variables for the genres that were found to be statistically significant and have relatively large sample sizes. After evaluating candidate models by running and comparing the results of out-of-sample validation, we landed on an ensemble model that combined the predictions of a parametric logistic regression model and a non-parametric random forest model. We then used this model to predict the probability of films released after 2009 becoming cult classics.</p>
+<p><img src="final_images/pred_plot.png" class="img-fluid"></p>
+<p>This visualization shows the 10 films released since 2010 with the highest and lowest probabilities of becoming cult classics plus a few additional films that serve as gut-checks. Note that this visualization excludes all films with “horror” as their primary genre, since, if included, these films would dominate the high-probability side. As we can see from the color of the points, films with the lowest probabilities tend to be blockbuster adventure and biopic films, while films with the highest probabilities tend to be obscure comedies. While some of the top films appear to be rather uninteresting, the top two are very promising. The film with the highest probability, Heartbeats, is about a French-Canadian love triangle, while the second film, Alps, is a Greek psychological drama art film. Both of these, at least at a glance, appear to have significant cult appeal. Additionally, Alps is directed by the popular director Yorgos Lanthimos. His status creates its own cult appeal, drawing fans back to his older and less popular works, like Alps. I would also like to note several other films that indicate that the model is functioning well. Avengers: Infinity War, despite critical acclaim, has a very low probability. This makes sense because it broke many box office records and could never be considered remotely “cult”. Films like The Holdovers, Portrait of a Lady on Fire, Good Time, and Bottoms all have subversive themes and cult appeal in their content, but are too well loved and too popular to have particularly high probabilities. While the formation of a cult around a piece of media remains intangible, this model at the very least does a good job of “faking it” or identifying what appear to be valid plausible and implausible candidates.</p>
 <p>So what makes a cult classic based on these results? A cult classic is most often a movie with strong identity cues, niche target appeal that makes it easy for fans to find community, and an attention curve that supports that community-building. The “recipe” is real in the sense that these signals cluster, but cult status stays partly intangible because it ultimately requires collective adoption over time, which is why our trajectory metrics and prediction work complement each other. They measure how cultness happens, not just what the film is.</p>
 </section>
-<section id="limitations" class="level2">
-<h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
-<p>A key limitation is that our “cult” outcome is only a placeholder for a social phenomenon that is partly cultural and community-driven. The LLM label (and therefore the model trained on it) may encode bias, especially toward horror or edgy keywords. And even after removing horror in one figure, the underlying signal can still privilege genres and tropes that sound cult-like rather than films that actually developed sustained fan communities. Similarly, our genre and keyword visuals summarize what’s common, but they don’t prove causation. Genres and themes correlate with cult status, yet they may just be markers of niche marketing or availability rather than the reason a fandom formed. The ratings trajectory app helps by introducing a time dimension, but it also has blind spots. Ratings volume reflects who is on the platform and when, and slow-burn could reflect streaming release timing, re-releases, awards, etc., not cult adoption per se. Finally, our visuals don’t directly measure the mechanisms people often associate with cult classics, such as public screening, quotability, online communities, controversy, or critical evaluation. So an open question is how much cult status is driven by social transmission and context versus the measurable content features we captured. These gaps point to next steps like validating labels against external lists, separating theatrical vs streaming eras, and adding signals for fandom activity to better distinguish true cult formation from general late popularity.</p>
+<section id="limitations-and-future-directions" class="level2">
+<h2 class="anchored" data-anchor-id="limitations-and-future-directions">Limitations and Future Directions</h2>
+<p>A key limitation is that our “cult” outcome is only a placeholder for a social phenomenon that is partly cultural and community-driven. The LLM label (and therefore the model trained on it) may encode bias, especially toward horror or edgy keywords. And even after removing horror in one figure, the underlying signal can still privilege genres and tropes that sound cult-like or that people online describe as cult-like rather than films that have actually developed sustained fan communities. Similarly, our genre and keyword visuals summarize what is common, but they don’t prove causation. Genres and themes correlate with cult status, yet they may just be markers of niche marketing or availability rather than the reason a fandom formed. The ratings trajectory app helps by introducing a time dimension, but it also has blind spots. Ratings volume reflects who is on the platform and when, and a slow-burn curve could reflect streaming release timing, re-releases, awards, etc., rather than cult adoption. Finally, our visuals don’t directly measure the mechanisms people often associate with cult classics, such as public screening, quotability, online communities, controversy, or critical evaluation. So an open question is how much cult status is driven by social transmission and context versus the measurable content features we captured. These gaps point to next steps like incorporating glide paths/adoption curves in prediction models, separating theatrical vs streaming eras, and adding signals for fandom activity to better distinguish true cult formation from general late popularity.</p>
 </section>
 <section id="contributions" class="level2">
 <h2 class="anchored" data-anchor-id="contributions">Contributions</h2>
@@ -109,6 +109,7 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="sebastian" class="level3">
 <h3 class="anchored" data-anchor-id="sebastian">Sebastian</h3>
+<p>Suggested the project topic. Found and led discussions with the domain expert. Queried the TMDB API to pull the bulk of the data used. Adapted code from Shilad’s Hallucination Detection activity to query ChatGPT using the OpenAI API and aggregate results to create the cult classifier outcome variable. Manually classified a random sample of 50 films and compared the results with the LLM classifications to verify their validity. Created and tuned an optimal mean model for the available data. Tested parametric and non-parametric models using out-of-sample validation and model selection/evaluation metrics to create a final ensemble model. Used the final model to predict future cult status for recent films. Created and presented a visualization of these predictions in the final presentation and written submission. Adapted final quarto document to allow for differences in file organization between group members by including png’s of data visualizations. Wrote portions of final written submissions pertaining to my work and suggested/implemented edits to other sections.</p>
 </section>
 </section>
 
@@ -149,18 +150,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -192,11 +182,48 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
-  function tippyHover(el, contentFn) {
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -206,8 +233,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -219,7 +255,129 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -263,6 +421,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -288,6 +447,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         });
         selectedAnnoteEl = undefined;
       };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
       // Attach click handler to the DT
       const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
       for (const annoteDlNode of annoteDls) {
@@ -348,6 +533,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
+
 
 
 
