@@ -1,5 +1,5 @@
 ---
-title: "LLM Classification and Preliminary Results"
+title: "LLM Classification"
 format: html
 ---
 Sebastian Stefanowicz
@@ -15,6 +15,7 @@ library(ellmer)
 library(dplyr)
 library(tibble)
 library(patchwork)
+library(janitor)
 
 # movies_df_10k <- read_csv("../data/raw/top_10000_movies.csv")
 ```
@@ -64,16 +65,24 @@ library(patchwork)
 ```
 ### Manual Verification of a sample of LLM classifications
 ```{r}
+# Set seed for reproducibility
+set.seed(500)
+
+# Read in data
 movies_10k_w_llm <- read.csv("../data/raw/10k_pre-2010-01-01-w-llm-classification.csv")
 
+# Remove LLM classifications columns to facilitate blind verification
 movies_10k_blind <- movies_10k_w_llm %>% select(-c(llm_class_1, llm_class_2, llm_class_3, llm_class_4, llm_class_5, llm_sum, llm_class_final))
 
 movies_10k_blind_sample <- movies_10k_blind %>% 
   slice_sample(n = 50)
 
+# Manually classify 50 movies
 manual_classifications <- c(0,0,1,0,0,0,0,1,1,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,1,0,1,0,1,0,0,1,1,0,1,0,0,1,0,0,0,1,0,1,1,0,0,0,1,0)
-# 2=unsure
+# Secondary classification allowing for uncertainty: 2=unsure
 manual_classifications_uncertain <- c(0,0,1,2,2,2,0,1,1,0,0,1,0,0,0,0,2,0,1,1,0,0,2,0,1,0,1,0,1,0,2,2,2,0,2,0,2,1,0,0,0,2,0,1,1,2,0,0,1,0)
+
+# Notes:
 # types of things im ruling out:
 # classic classics, broad appeal, successful, universally well received
 # bland, lack of unique qualities or niche appeal
@@ -87,6 +96,7 @@ manual_classifications_uncertain <- c(0,0,1,2,2,2,0,1,1,0,0,1,0,0,0,0,2,0,1,1,0,
 # disparaged by audiences and critics upon release (maybe controversial, misunderstood, ahead of its time) but now widely loved
 # still heavily divided/either hate it or loved it. examples: freddy got fingered, the cat in the hat
 
+# Insert manual classification into data
 movies_10k_verification <- movies_10k_blind_sample %>%
   mutate(
     manual_class = manual_classifications,
@@ -97,11 +107,11 @@ movies_10k_verification <- movies_10k_verification %>% left_join(movies_10k_w_ll
 
 movies_10k_verification <- movies_10k_verification %>% select(-ends_with(".y"))
 
+# Save data
 # write.csv(movies_10k_verification, "../data/raw/movies_10k_verification")
 
+# Inspect results
 movies_10k_verification_check <- movies_10k_verification %>% filter(manual_class != llm_class_final)
-
-library(janitor)
 
 table(movies_10k_verification$llm_class_final, movies_10k_verification$manual_class)
 ```

@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Incorporating Genre and Classifying</title>
+<title>Classifying and Predicting</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -79,7 +79,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Incorporating Genre and Classifying</h1>
+<h1 class="title">Classifying and Predicting</h1>
 </div>
 
 
@@ -96,124 +96,122 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<p>Sebastian Stefanowicz</p>
+<p>AI Usage: Utilized generative AI to assist with modeling/predicting workflow (particularly model selection and evaluation criteria/functions/packages) and select appropriate visualizations to convey the desired message.</p>
 <section id="setup" class="level3">
 <h3 class="anchored" data-anchor-id="setup">Setup</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ellmer)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tibble)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(fastDummies)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(caret)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pROC)</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(randomForest)</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(car)</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>imdb <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="st">"data/raw/title.basics.tsv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning: One or more parsing issues, call `problems()` on your data frame for details,
-e.g.:
-  dat &lt;- vroom(...)
-  problems(dat)</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>movies_10k_w_llm <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/raw/10k_pre-2010-01-01-w-llm-classification.csv"</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>top_movies <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/top_10000_movies.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load packages and data</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ellmer)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tibble)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(fastDummies)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(caret)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pROC)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(randomForest)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(car)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>imdb <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="st">"data/raw/title.basics.tsv"</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>movies_10k_w_llm <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/raw/10k_pre-2010-01-01-w-llm-classification.csv"</span>)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>top_movies <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/top_10000_movies.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="training-logit-model" class="level1">
 <h1>Training logit model</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(imdb<span class="sc">$</span>titleType)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(imdb<span class="sc">$</span>titleType)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code> [1] "short"        "movie"        "tvShort"      "tvMovie"      "tvEpisode"   
  [6] "tvSeries"     "tvMiniSeries" "tvSpecial"    "video"        "videoGame"   
 [11] "tvPilot"     </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>imdb <span class="ot">&lt;-</span> imdb <span class="sc">%&gt;%</span> <span class="fu">filter</span>(titleType <span class="sc">==</span> <span class="st">"movie"</span>)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># separating out genre arrays</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>imdb <span class="ot">&lt;-</span> imdb <span class="sc">%&gt;%</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">genres =</span> <span class="fu">str_split</span>(genres, <span class="st">","</span>)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">genre1 =</span> <span class="fu">map_chr</span>(genres, <span class="sc">~</span> .x[<span class="dv">1</span>] <span class="sc">%||%</span> <span class="cn">NA_character_</span>),</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">genre2 =</span> <span class="fu">map_chr</span>(genres, <span class="sc">~</span> .x[<span class="dv">2</span>] <span class="sc">%||%</span> <span class="cn">NA_character_</span>),</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">genre3 =</span> <span class="fu">map_chr</span>(genres, <span class="sc">~</span> .x[<span class="dv">3</span>] <span class="sc">%||%</span> <span class="cn">NA_character_</span>)</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co"># combining imdb and tmdb data</span></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>combined_movies <span class="ot">&lt;-</span> movies_10k_w_llm <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">tconst =</span> imdb_id) <span class="sc">%&gt;%</span> <span class="fu">left_join</span>(imdb, <span class="at">by =</span> <span class="st">"tconst"</span>)</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="co"># remove movies with na for genre1 and add roi</span></span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>combined_movies_filtered <span class="ot">&lt;-</span> combined_movies <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(genre1)) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">roi =</span> revenue<span class="sc">/</span>budget)</span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(combined_movies_filtered<span class="sc">$</span>genre1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>imdb <span class="ot">&lt;-</span> imdb <span class="sc">%&gt;%</span> <span class="fu">filter</span>(titleType <span class="sc">==</span> <span class="st">"movie"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Separating out genre arrays</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>imdb <span class="ot">&lt;-</span> imdb <span class="sc">%&gt;%</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">genres =</span> <span class="fu">str_split</span>(genres, <span class="st">","</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">genre1 =</span> <span class="fu">map_chr</span>(genres, <span class="sc">~</span> .x[<span class="dv">1</span>] <span class="sc">%||%</span> <span class="cn">NA_character_</span>),</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">genre2 =</span> <span class="fu">map_chr</span>(genres, <span class="sc">~</span> .x[<span class="dv">2</span>] <span class="sc">%||%</span> <span class="cn">NA_character_</span>),</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">genre3 =</span> <span class="fu">map_chr</span>(genres, <span class="sc">~</span> .x[<span class="dv">3</span>] <span class="sc">%||%</span> <span class="cn">NA_character_</span>)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Combining imdb and tmdb data</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>combined_movies <span class="ot">&lt;-</span> movies_10k_w_llm <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">tconst =</span> imdb_id) <span class="sc">%&gt;%</span> <span class="fu">left_join</span>(imdb, <span class="at">by =</span> <span class="st">"tconst"</span>)</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove movies with NA for genre1 and adding ROI predictor</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>combined_movies_filtered <span class="ot">&lt;-</span> combined_movies <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(genre1)) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">roi =</span> revenue<span class="sc">/</span>budget)</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(combined_movies_filtered<span class="sc">$</span>genre1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code> [1] "Drama"     "Crime"     "Biography" "Adventure" "Action"    "Animation"
  [7] "Comedy"    "Horror"    "Mystery"   "Western"   "Fantasy"   "Thriller" 
 [13] "Sci-Fi"    "Romance"   "Film-Noir" "Family"   </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create genre dummy variables</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>all_genres <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Drama"</span>, <span class="st">"Crime"</span>, <span class="st">"Biography"</span>, <span class="st">"Adventure"</span>, <span class="st">"Action"</span>, <span class="st">"Animation"</span>,</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                <span class="st">"Comedy"</span>, <span class="st">"Horror"</span>, <span class="st">"Mystery"</span>, <span class="st">"Western"</span>, <span class="st">"Fantasy"</span>, <span class="st">"Thriller"</span>,</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                <span class="st">"Sci-Fi"</span>, <span class="st">"Romance"</span>, <span class="st">"Film-Noir"</span>, <span class="st">"Family"</span>, <span class="st">"Musical"</span>, <span class="st">"Documentary"</span>)</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>combined_movies_filtered<span class="sc">$</span>genre1 <span class="ot">&lt;-</span> <span class="fu">factor</span>(combined_movies_filtered<span class="sc">$</span>genre1,</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>                                          <span class="at">levels =</span> all_genres)</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>combined_movies_filtered <span class="ot">&lt;-</span> combined_movies_filtered <span class="sc">%&gt;%</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  fastDummies<span class="sc">::</span><span class="fu">dummy_cols</span>(<span class="at">select_columns =</span> <span class="st">"genre1"</span>, <span class="at">remove_first_dummy =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co"># logistic Regression to see genres</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>model_logit1 <span class="ot">&lt;-</span> <span class="fu">glm</span>(</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  llm_class_final <span class="sc">~</span> vote_average <span class="sc">+</span> popularity <span class="sc">+</span> <span class="fu">log</span>(roi) <span class="sc">+</span> runtime <span class="sc">+</span> genre1,</span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> combined_movies_filtered,</span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> binomial</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_logit1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create genre dummy variables</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>all_genres <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Drama"</span>, <span class="st">"Crime"</span>, <span class="st">"Biography"</span>, <span class="st">"Adventure"</span>, <span class="st">"Action"</span>, <span class="st">"Animation"</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                <span class="st">"Comedy"</span>, <span class="st">"Horror"</span>, <span class="st">"Mystery"</span>, <span class="st">"Western"</span>, <span class="st">"Fantasy"</span>, <span class="st">"Thriller"</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                <span class="st">"Sci-Fi"</span>, <span class="st">"Romance"</span>, <span class="st">"Film-Noir"</span>, <span class="st">"Family"</span>, <span class="st">"Musical"</span>, <span class="st">"Documentary"</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>combined_movies_filtered<span class="sc">$</span>genre1 <span class="ot">&lt;-</span> <span class="fu">factor</span>(combined_movies_filtered<span class="sc">$</span>genre1,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>                                          <span class="at">levels =</span> all_genres)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>combined_movies_filtered <span class="ot">&lt;-</span> combined_movies_filtered <span class="sc">%&gt;%</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  fastDummies<span class="sc">::</span><span class="fu">dummy_cols</span>(<span class="at">select_columns =</span> <span class="st">"genre1"</span>, <span class="at">remove_first_dummy =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Logistic Regression to see genres</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>model_logit1 <span class="ot">&lt;-</span> <span class="fu">glm</span>(</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  llm_class_final <span class="sc">~</span> vote_average <span class="sc">+</span> popularity <span class="sc">+</span> <span class="fu">log</span>(budget) <span class="sc">+</span> <span class="fu">log</span>(roi) <span class="sc">+</span> runtime <span class="sc">+</span> genre1,</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> combined_movies_filtered,</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> binomial</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_logit1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
-glm(formula = llm_class_final ~ vote_average + popularity + log(roi) + 
-    runtime + genre1, family = binomial, data = combined_movies_filtered)
+glm(formula = llm_class_final ~ vote_average + popularity + log(budget) + 
+    log(roi) + runtime + genre1, family = binomial, data = combined_movies_filtered)
 
 Coefficients:
                   Estimate Std. Error z value Pr(&gt;|z|)    
-(Intercept)      -3.842764   0.511163  -7.518 5.58e-14 ***
-vote_average      0.958398   0.071755  13.356  &lt; 2e-16 ***
-popularity       -0.016795   0.007858  -2.137   0.0326 *  
-log(roi)         -0.166490   0.029427  -5.658 1.53e-08 ***
-runtime          -0.035525   0.002725 -13.037  &lt; 2e-16 ***
-genre1Crime       0.220779   0.171463   1.288   0.1979    
-genre1Biography  -0.861485   0.287175  -3.000   0.0027 ** 
-genre1Adventure   0.055082   0.163108   0.338   0.7356    
-genre1Action      0.676717   0.136135   4.971 6.66e-07 ***
-genre1Animation  -0.002767   0.479618  -0.006   0.9954    
-genre1Comedy      0.617741   0.132388   4.666 3.07e-06 ***
-genre1Horror      2.113203   0.197419  10.704  &lt; 2e-16 ***
-genre1Mystery     0.999175   0.557342   1.793   0.0730 .  
-genre1Western   -11.856306 535.411184  -0.022   0.9823    
-genre1Fantasy     2.037003   0.437568   4.655 3.24e-06 ***
-genre1Thriller  -12.658461 378.055226  -0.033   0.9733    
-genre1Sci-Fi      2.520492   1.199210   2.102   0.0356 *  
-genre1Romance   -12.154217 535.411179  -0.023   0.9819    
-genre1Film-Noir -12.265872 535.411179  -0.023   0.9817    
-genre1Family    -12.293943 378.588939  -0.032   0.9741    
+(Intercept)       6.409209   0.805995   7.952 1.84e-15 ***
+vote_average      0.573899   0.077622   7.394 1.43e-13 ***
+popularity        0.005710   0.007144   0.799   0.4242    
+log(budget)      -0.593416   0.035688 -16.628  &lt; 2e-16 ***
+log(roi)         -0.308412   0.032662  -9.442  &lt; 2e-16 ***
+runtime          -0.020411   0.002774  -7.357 1.88e-13 ***
+genre1Crime       0.348856   0.185111   1.885   0.0595 .  
+genre1Biography  -0.503496   0.298210  -1.688   0.0913 .  
+genre1Adventure   0.778819   0.176129   4.422 9.78e-06 ***
+genre1Action      1.277145   0.151437   8.434  &lt; 2e-16 ***
+genre1Animation   0.592939   0.501331   1.183   0.2369    
+genre1Comedy      0.996433   0.144497   6.896 5.35e-12 ***
+genre1Horror      2.118291   0.208227  10.173  &lt; 2e-16 ***
+genre1Mystery     1.422937   0.584429   2.435   0.0149 *  
+genre1Western   -12.818566 535.411187  -0.024   0.9809    
+genre1Fantasy     2.319107   0.457134   5.073 3.91e-07 ***
+genre1Thriller  -12.157584 363.851914  -0.033   0.9733    
+genre1Sci-Fi      2.921177   1.236650   2.362   0.0182 *  
+genre1Romance   -11.522063 535.411182  -0.022   0.9828    
+genre1Film-Noir -13.137810 535.411183  -0.025   0.9804    
+genre1Family    -11.988311 377.536067  -0.032   0.9747    
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 (Dispersion parameter for binomial family taken to be 1)
 
     Null deviance: 4337.7  on 3629  degrees of freedom
-Residual deviance: 3806.8  on 3610  degrees of freedom
-AIC: 3846.8
+Residual deviance: 3483.5  on 3609  degrees of freedom
+AIC: 3525.5
 
 Number of Fisher Scoring iterations: 12</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(combined_movies_filtered<span class="sc">$</span>genre1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(combined_movies_filtered<span class="sc">$</span>genre1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
       Drama       Crime   Biography   Adventure      Action   Animation 
@@ -223,11 +221,11 @@ Number of Fisher Scoring iterations: 12</code></pre>
      Sci-Fi     Romance   Film-Noir      Family     Musical Documentary 
           4           1           1           2           0           0 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># logistics regression with only genres that are significant and have suitable sample size</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>model_logit2 <span class="ot">&lt;-</span> <span class="fu">glm</span>(llm_class_final <span class="sc">~</span> vote_average <span class="sc">+</span> popularity <span class="sc">+</span> <span class="fu">log</span>(budget) <span class="sc">+</span> <span class="fu">log</span>(roi) <span class="sc">+</span> runtime <span class="sc">+</span> genre1_Biography <span class="sc">+</span> genre1_Action <span class="sc">+</span> genre1_Comedy <span class="sc">+</span> genre1_Horror <span class="sc">+</span> genre1_Fantasy,</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">data =</span> combined_movies_filtered,</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">family =</span> binomial)</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_logit2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Logistics regression with only genres that are significant and have suitable sample size</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>model_logit2 <span class="ot">&lt;-</span> <span class="fu">glm</span>(llm_class_final <span class="sc">~</span> vote_average <span class="sc">+</span> popularity <span class="sc">+</span> <span class="fu">log</span>(budget) <span class="sc">+</span> <span class="fu">log</span>(roi) <span class="sc">+</span> runtime <span class="sc">+</span> genre1_Biography <span class="sc">+</span> genre1_Action <span class="sc">+</span> genre1_Comedy <span class="sc">+</span> genre1_Horror <span class="sc">+</span> genre1_Fantasy,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">data =</span> combined_movies_filtered,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">family =</span> binomial)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_logit2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -259,44 +257,43 @@ AIC: 3538.4
 
 Number of Fisher Scoring iterations: 5</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># including log(budget) biases toward found footage/horror movies</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># including log(budget) biases toward found footage/horror movies</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</section>
-<section id="testing-logit-prediction-on-30-of-training-data-before-new-data" class="level1">
-<h1>Testing logit prediction on 30% of training data before new data</h1>
+<section id="testing-logit-prediction-on-30-of-training-data-before-new-data" class="level3">
+<h3 class="anchored" data-anchor-id="testing-logit-prediction-on-30-of-training-data-before-new-data">Testing logit prediction on 30% of training data before new data</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># set seed for reproducibility</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># create index (e.g., 70% train / 30% test)</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>train_idx <span class="ot">&lt;-</span> <span class="fu">createDataPartition</span>(</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  combined_movies_filtered<span class="sc">$</span>llm_class_final,</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">p =</span> <span class="fl">0.7</span>,</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">list =</span> <span class="cn">FALSE</span></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co"># bisecting data</span></span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>train_data <span class="ot">&lt;-</span> combined_movies_filtered[train_idx, ]</span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>test_data  <span class="ot">&lt;-</span> combined_movies_filtered[<span class="sc">-</span>train_idx, ]</span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="co"># checking balance</span></span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="fu">prop.table</span>(<span class="fu">table</span>(train_data<span class="sc">$</span>llm_class_final))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set seed for reproducibility</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Create index (70% train / 30% test)</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>train_idx <span class="ot">&lt;-</span> <span class="fu">createDataPartition</span>(</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  combined_movies_filtered<span class="sc">$</span>llm_class_final,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">p =</span> <span class="fl">0.7</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">list =</span> <span class="cn">FALSE</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Bisecting data</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>train_data <span class="ot">&lt;-</span> combined_movies_filtered[train_idx, ]</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>test_data  <span class="ot">&lt;-</span> combined_movies_filtered[<span class="sc">-</span>train_idx, ]</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Checking balance</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="fu">prop.table</span>(<span class="fu">table</span>(train_data<span class="sc">$</span>llm_class_final))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
         0         1 
 0.7197954 0.2802046 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">prop.table</span>(<span class="fu">table</span>(test_data<span class="sc">$</span>llm_class_final))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">prop.table</span>(<span class="fu">table</span>(test_data<span class="sc">$</span>llm_class_final))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
         0         1 
 0.7043159 0.2956841 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># train logit model with training data</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>logit_train <span class="ot">&lt;-</span> <span class="fu">glm</span>(llm_class_final <span class="sc">~</span> vote_average <span class="sc">+</span> popularity <span class="sc">+</span> <span class="fu">log</span>(budget) <span class="sc">+</span> <span class="fu">log</span>(roi) <span class="sc">+</span> runtime <span class="sc">+</span> genre1_Biography <span class="sc">+</span> genre1_Action <span class="sc">+</span> genre1_Comedy <span class="sc">+</span> genre1_Horror <span class="sc">+</span> genre1_Fantasy, </span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">data =</span> train_data, </span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">family =</span> binomial)</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(logit_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Train logit model with training data</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>logit_train <span class="ot">&lt;-</span> <span class="fu">glm</span>(llm_class_final <span class="sc">~</span> vote_average <span class="sc">+</span> popularity <span class="sc">+</span> <span class="fu">log</span>(budget) <span class="sc">+</span> <span class="fu">log</span>(roi) <span class="sc">+</span> runtime <span class="sc">+</span> genre1_Biography <span class="sc">+</span> genre1_Action <span class="sc">+</span> genre1_Comedy <span class="sc">+</span> genre1_Horror <span class="sc">+</span> genre1_Fantasy, </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">data =</span> train_data, </span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">family =</span> binomial)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(logit_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -328,41 +325,43 @@ AIC: 2472.2
 
 Number of Fisher Scoring iterations: 5</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># predict logit on test set</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>test_data <span class="ot">&lt;-</span> test_data <span class="sc">%&gt;%</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">pred_prob_logit =</span> <span class="fu">predict</span>(logit_train, <span class="at">newdata =</span> ., <span class="at">type =</span> <span class="st">"response"</span>),</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">pred_class_logit =</span> <span class="fu">if_else</span>(pred_prob_logit <span class="sc">&gt;=</span> <span class="fl">0.351</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict logit on test set</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>test_data <span class="ot">&lt;-</span> test_data <span class="sc">%&gt;%</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">pred_prob_logit =</span> <span class="fu">predict</span>(logit_train, <span class="at">newdata =</span> ., <span class="at">type =</span> <span class="st">"response"</span>),</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">pred_class_logit =</span> <span class="fu">if_else</span>(pred_prob_logit <span class="sc">&gt;=</span> <span class="fl">0.351</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="predicting-with-logit-model" class="level1">
-<h1>Predicting with logit model</h1>
+<section id="predicting-with-logit-model" class="level3">
+<h3 class="anchored" data-anchor-id="predicting-with-logit-model">Predicting with logit model</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>top_movies <span class="ot">&lt;-</span> top_movies <span class="sc">%&gt;%</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(imdb, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"imdb_id"</span> <span class="ot">=</span> <span class="st">"tconst"</span>))</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co"># filter out training data and also movie released in past 6 months</span></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>top_movies_post2009 <span class="ot">&lt;-</span> top_movies <span class="sc">%&gt;%</span></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(release_date <span class="sc">&gt;=</span> <span class="fu">as.Date</span>(<span class="st">"2010-01-01"</span>), release_date <span class="sc">&lt;</span> <span class="fu">as.Date</span>(<span class="st">"2025-04-01"</span>), budget <span class="sc">&gt;</span> <span class="dv">10</span>, revenue <span class="sc">&gt;</span> <span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">roi =</span> revenue<span class="sc">/</span>budget) <span class="sc">%&gt;%</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_budget =</span> <span class="fu">log</span>(budget <span class="sc">+</span> <span class="dv">1</span>),</span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_roi =</span> <span class="fu">log</span>(roi <span class="sc">+</span> <span class="dv">1</span>)</span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>top_movies_post2009<span class="sc">$</span>genre1 <span class="ot">&lt;-</span> <span class="fu">factor</span>(top_movies_post2009<span class="sc">$</span>genre1, <span class="at">levels =</span> all_genres)</span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>top_movies_post2009 <span class="ot">&lt;-</span> top_movies_post2009 <span class="sc">%&gt;%</span></span>
-<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>  fastDummies<span class="sc">::</span><span class="fu">dummy_cols</span>(<span class="at">select_columns =</span> <span class="st">"genre1"</span>, <span class="at">remove_first_dummy =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>top_movies_post2009_preds <span class="ot">&lt;-</span> top_movies_post2009 <span class="sc">%&gt;%</span></span>
-<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">pred_prob_logit =</span> <span class="fu">predict</span>(model_logit2, <span class="at">newdata =</span> ., <span class="at">type =</span> <span class="st">"response"</span>),</span>
-<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">pred_class_logit =</span> <span class="fu">if_else</span>(pred_prob_logit <span class="sc">&gt;=</span> <span class="fl">0.351</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a><span class="fu">vif</span>(model_logit2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>top_movies <span class="ot">&lt;-</span> top_movies <span class="sc">%&gt;%</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(imdb, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"imdb_id"</span> <span class="ot">=</span> <span class="st">"tconst"</span>))</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter out training data and also movies released in past 6 months</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>top_movies_post2009 <span class="ot">&lt;-</span> top_movies <span class="sc">%&gt;%</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(release_date <span class="sc">&gt;=</span> <span class="fu">as.Date</span>(<span class="st">"2010-01-01"</span>), release_date <span class="sc">&lt;</span> <span class="fu">as.Date</span>(<span class="st">"2025-04-01"</span>), budget <span class="sc">&gt;</span> <span class="dv">10</span>, revenue <span class="sc">&gt;</span> <span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">roi =</span> revenue<span class="sc">/</span>budget) <span class="sc">%&gt;%</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_budget =</span> <span class="fu">log</span>(budget),</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_roi =</span> <span class="fu">log</span>(roi)</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>top_movies_post2009<span class="sc">$</span>genre1 <span class="ot">&lt;-</span> <span class="fu">factor</span>(top_movies_post2009<span class="sc">$</span>genre1, <span class="at">levels =</span> all_genres)</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>top_movies_post2009 <span class="ot">&lt;-</span> top_movies_post2009 <span class="sc">%&gt;%</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>  fastDummies<span class="sc">::</span><span class="fu">dummy_cols</span>(<span class="at">select_columns =</span> <span class="st">"genre1"</span>, <span class="at">remove_first_dummy =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Predicting</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>top_movies_post2009_preds <span class="ot">&lt;-</span> top_movies_post2009 <span class="sc">%&gt;%</span></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">pred_prob_logit =</span> <span class="fu">predict</span>(model_logit2, <span class="at">newdata =</span> ., <span class="at">type =</span> <span class="st">"response"</span>),</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">pred_class_logit =</span> <span class="fu">if_else</span>(pred_prob_logit <span class="sc">&gt;=</span> <span class="fl">0.351</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a><span class="co"># VIF to test for multicollinearity</span></span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a><span class="fu">vif</span>(model_logit2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>    vote_average       popularity      log(budget)         log(roi) 
         1.532938         1.072492         1.343539         1.227741 
@@ -373,46 +372,50 @@ Number of Fisher Scoring iterations: 5</code></pre>
 </div>
 </div>
 </section>
-<section id="testing-rf-prediction-on-30-of-training-data-before-new-data" class="level1">
-<h1>Testing rf prediction on 30% of training data before new data</h1>
+<section id="testing-rf-prediction-on-30-of-training-data-before-new-data" class="level3">
+<h3 class="anchored" data-anchor-id="testing-rf-prediction-on-30-of-training-data-before-new-data">Testing rf prediction on 30% of training data before new data</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>train_data<span class="sc">$</span>llm_class_final <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(train_data<span class="sc">$</span>llm_class_final)</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>test_data<span class="sc">$</span>llm_class_final  <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(test_data<span class="sc">$</span>llm_class_final)</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>train_data <span class="ot">&lt;-</span> train_data <span class="sc">%&gt;%</span></span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>(</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_budget =</span> <span class="fu">log</span>(budget <span class="sc">+</span> <span class="dv">1</span>),</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_roi =</span> <span class="fu">log</span>(roi <span class="sc">+</span> <span class="dv">1</span>)</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>test_data <span class="ot">&lt;-</span> test_data <span class="sc">%&gt;%</span></span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>(</span>
-<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_budget =</span> <span class="fu">log</span>(budget <span class="sc">+</span> <span class="dv">1</span>),</span>
-<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_roi =</span> <span class="fu">log</span>(roi <span class="sc">+</span> <span class="dv">1</span>)</span>
-<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>rf_train <span class="ot">&lt;-</span> <span class="fu">randomForest</span>(</span>
-<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>  llm_class_final <span class="sc">~</span> vote_average <span class="sc">+</span> popularity <span class="sc">+</span> log_budget <span class="sc">+</span> log_roi <span class="sc">+</span></span>
-<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>    runtime <span class="sc">+</span> genre1_Biography <span class="sc">+</span> genre1_Action <span class="sc">+</span> genre1_Comedy <span class="sc">+</span></span>
-<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>    genre1_Horror <span class="sc">+</span> genre1_Fantasy,</span>
-<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> train_data,</span>
-<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">ntree =</span> <span class="dv">500</span>,</span>
-<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">mtry =</span> <span class="dv">4</span></span>
-<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>test_data<span class="sc">$</span>pred_prob_rf <span class="ot">&lt;-</span> <span class="fu">predict</span>(</span>
-<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a>  rf_train,</span>
-<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> test_data,</span>
-<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"prob"</span></span>
-<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a>)[, <span class="dv">2</span>]</span>
-<span id="cb24-30"><a href="#cb24-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-31"><a href="#cb24-31" aria-hidden="true" tabindex="-1"></a>test_data<span class="sc">$</span>pred_class_rf <span class="ot">&lt;-</span> <span class="fu">if_else</span>(test_data<span class="sc">$</span>pred_prob_rf <span class="sc">&gt;=</span> <span class="fl">0.351</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb24-32"><a href="#cb24-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-33"><a href="#cb24-33" aria-hidden="true" tabindex="-1"></a><span class="co"># evaluate models</span></span>
-<span id="cb24-34"><a href="#cb24-34" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(</span>
-<span id="cb24-35"><a href="#cb24-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(test_data<span class="sc">$</span>pred_class_logit),</span>
-<span id="cb24-36"><a href="#cb24-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(test_data<span class="sc">$</span>llm_class_final)</span>
-<span id="cb24-37"><a href="#cb24-37" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Bisecting data</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>train_data<span class="sc">$</span>llm_class_final <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(train_data<span class="sc">$</span>llm_class_final)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>test_data<span class="sc">$</span>llm_class_final  <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(test_data<span class="sc">$</span>llm_class_final)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Logging predictors</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>train_data <span class="ot">&lt;-</span> train_data <span class="sc">%&gt;%</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>(</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_budget =</span> <span class="fu">log</span>(budget),</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_roi =</span> <span class="fu">log</span>(roi)</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>test_data <span class="ot">&lt;-</span> test_data <span class="sc">%&gt;%</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>(</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_budget =</span> <span class="fu">log</span>(budget),</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_roi =</span> <span class="fu">log</span>(roi)</span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Running RF model</span></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>rf_train <span class="ot">&lt;-</span> <span class="fu">randomForest</span>(</span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>  llm_class_final <span class="sc">~</span> vote_average <span class="sc">+</span> popularity <span class="sc">+</span> log_budget <span class="sc">+</span> log_roi <span class="sc">+</span></span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>    runtime <span class="sc">+</span> genre1_Biography <span class="sc">+</span> genre1_Action <span class="sc">+</span> genre1_Comedy <span class="sc">+</span></span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>    genre1_Horror <span class="sc">+</span> genre1_Fantasy,</span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> train_data,</span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">ntree =</span> <span class="dv">500</span>,</span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">mtry =</span> <span class="dv">4</span></span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Predicting with RF model</span></span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>test_data<span class="sc">$</span>pred_prob_rf <span class="ot">&lt;-</span> <span class="fu">predict</span>(</span>
+<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a>  rf_train,</span>
+<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> test_data,</span>
+<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"prob"</span></span>
+<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a>)[, <span class="dv">2</span>]</span>
+<span id="cb22-34"><a href="#cb22-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-35"><a href="#cb22-35" aria-hidden="true" tabindex="-1"></a>test_data<span class="sc">$</span>pred_class_rf <span class="ot">&lt;-</span> <span class="fu">if_else</span>(test_data<span class="sc">$</span>pred_prob_rf <span class="sc">&gt;=</span> <span class="fl">0.351</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb22-36"><a href="#cb22-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-37"><a href="#cb22-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate models</span></span>
+<span id="cb22-38"><a href="#cb22-38" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(</span>
+<span id="cb22-39"><a href="#cb22-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(test_data<span class="sc">$</span>pred_class_logit),</span>
+<span id="cb22-40"><a href="#cb22-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(test_data<span class="sc">$</span>llm_class_final)</span>
+<span id="cb22-41"><a href="#cb22-41" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Confusion Matrix and Statistics
 
@@ -442,134 +445,138 @@ Prediction   0   1
        'Positive' Class : 0               
                                           </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(test_data<span class="sc">$</span>pred_class_rf),</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(test_data<span class="sc">$</span>llm_class_final)</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(test_data<span class="sc">$</span>pred_class_rf),</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(test_data<span class="sc">$</span>llm_class_final)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Confusion Matrix and Statistics
 
           Reference
 Prediction   0   1
-         0 593 117
-         1 174 205
+         0 585 122
+         1 182 200
                                           
-               Accuracy : 0.7328          
-                 95% CI : (0.7054, 0.7589)
+               Accuracy : 0.7208          
+                 95% CI : (0.6932, 0.7473)
     No Information Rate : 0.7043          
-    P-Value [Acc &gt; NIR] : 0.020664        
+    P-Value [Acc &gt; NIR] : 0.1222672       
                                           
-                  Kappa : 0.3898          
+                  Kappa : 0.3641          
                                           
- Mcnemar's Test P-Value : 0.001028        
+ Mcnemar's Test P-Value : 0.0007147       
                                           
-            Sensitivity : 0.7731          
-            Specificity : 0.6366          
-         Pos Pred Value : 0.8352          
-         Neg Pred Value : 0.5409          
+            Sensitivity : 0.7627          
+            Specificity : 0.6211          
+         Pos Pred Value : 0.8274          
+         Neg Pred Value : 0.5236          
              Prevalence : 0.7043          
-         Detection Rate : 0.5445          
-   Detection Prevalence : 0.6520          
-      Balanced Accuracy : 0.7049          
+         Detection Rate : 0.5372          
+   Detection Prevalence : 0.6492          
+      Balanced Accuracy : 0.6919          
                                           
        'Positive' Class : 0               
                                           </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>roc_logit <span class="ot">&lt;-</span> <span class="fu">roc</span>(test_data<span class="sc">$</span>llm_class_final, test_data<span class="sc">$</span>pred_prob_logit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>roc_logit <span class="ot">&lt;-</span> <span class="fu">roc</span>(test_data<span class="sc">$</span>llm_class_final, test_data<span class="sc">$</span>pred_prob_logit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Setting levels: control = 0, case = 1</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Setting direction: controls &lt; cases</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>roc_rf    <span class="ot">&lt;-</span> <span class="fu">roc</span>(test_data<span class="sc">$</span>llm_class_final, test_data<span class="sc">$</span>pred_prob_rf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>roc_rf    <span class="ot">&lt;-</span> <span class="fu">roc</span>(test_data<span class="sc">$</span>llm_class_final, test_data<span class="sc">$</span>pred_prob_rf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Setting levels: control = 0, case = 1
 Setting direction: controls &lt; cases</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">auc</span>(roc_logit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">auc</span>(roc_logit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Area under the curve: 0.7932</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">auc</span>(roc_rf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">auc</span>(roc_rf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Area under the curve: 0.7885</code></pre>
+<pre><code>Area under the curve: 0.7884</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ensemble model</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>test_data <span class="ot">&lt;-</span> test_data <span class="sc">%&gt;%</span></span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">pred_prob_ensemble =</span> (pred_prob_logit <span class="sc">+</span> pred_prob_rf) <span class="sc">/</span> <span class="dv">2</span>,</span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">pred_class_ensemble =</span> <span class="fu">if_else</span>(pred_prob_ensemble <span class="sc">&gt;=</span> <span class="fl">0.351</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(</span>
-<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(test_data<span class="sc">$</span>pred_class_ensemble),</span>
-<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(test_data<span class="sc">$</span>llm_class_final)</span>
-<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create ensemble model</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>test_data <span class="ot">&lt;-</span> test_data <span class="sc">%&gt;%</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">pred_prob_ensemble =</span> (pred_prob_logit <span class="sc">+</span> pred_prob_rf) <span class="sc">/</span> <span class="dv">2</span>,</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">pred_class_ensemble =</span> <span class="fu">if_else</span>(pred_prob_ensemble <span class="sc">&gt;=</span> <span class="fl">0.351</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate ensemble model</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(test_data<span class="sc">$</span>pred_class_ensemble),</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(test_data<span class="sc">$</span>llm_class_final)</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Confusion Matrix and Statistics
 
           Reference
 Prediction   0   1
-         0 605 123
-         1 162 199
+         0 610 122
+         1 157 200
                                           
-               Accuracy : 0.7383          
-                 95% CI : (0.7111, 0.7642)
+               Accuracy : 0.7438          
+                 95% CI : (0.7168, 0.7695)
     No Information Rate : 0.7043          
-    P-Value [Acc &gt; NIR] : 0.007194        
+    P-Value [Acc &gt; NIR] : 0.002142        
                                           
-                  Kappa : 0.393           
+                  Kappa : 0.4037          
                                           
- Mcnemar's Test P-Value : 0.024390        
+ Mcnemar's Test P-Value : 0.041798        
                                           
-            Sensitivity : 0.7888          
-            Specificity : 0.6180          
-         Pos Pred Value : 0.8310          
-         Neg Pred Value : 0.5512          
+            Sensitivity : 0.7953          
+            Specificity : 0.6211          
+         Pos Pred Value : 0.8333          
+         Neg Pred Value : 0.5602          
              Prevalence : 0.7043          
-         Detection Rate : 0.5556          
-   Detection Prevalence : 0.6685          
-      Balanced Accuracy : 0.7034          
+         Detection Rate : 0.5601          
+   Detection Prevalence : 0.6722          
+      Balanced Accuracy : 0.7082          
                                           
        'Positive' Class : 0               
                                           </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>roc_ens <span class="ot">&lt;-</span> <span class="fu">roc</span>(test_data<span class="sc">$</span>llm_class_final, test_data<span class="sc">$</span>pred_prob_ensemble)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>roc_ens <span class="ot">&lt;-</span> <span class="fu">roc</span>(test_data<span class="sc">$</span>llm_class_final, test_data<span class="sc">$</span>pred_prob_ensemble)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Setting levels: control = 0, case = 1
 Setting direction: controls &lt; cases</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">auc</span>(roc_ens)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">auc</span>(roc_ens)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Area under the curve: 0.8049</code></pre>
+<pre><code>Area under the curve: 0.8045</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">coords</span>(roc_rf, <span class="st">"best"</span>, <span class="at">ret =</span> <span class="st">"threshold"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get optimal classification split</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">coords</span>(roc_rf, <span class="st">"best"</span>, <span class="at">ret =</span> <span class="st">"threshold"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  threshold
-1     0.247</code></pre>
+1     0.225</code></pre>
 </div>
 </div>
 </section>
-<section id="random-forest" class="level1">
-<h1>Random forest</h1>
+<section id="predicting-with-random-forest-and-ensemble-models" class="level3">
+<h3 class="anchored" data-anchor-id="predicting-with-random-forest-and-ensemble-models">Predicting with random forest and ensemble models</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>combined_movies_filtered<span class="sc">$</span>llm_class_final <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(combined_movies_filtered<span class="sc">$</span>llm_class_final)</span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>combined_movies_filtered <span class="ot">&lt;-</span> combined_movies_filtered <span class="sc">%&gt;%</span></span>
-<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_budget =</span> <span class="fu">log</span>(budget <span class="sc">+</span> <span class="dv">1</span>),</span>
-<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_roi =</span> <span class="fu">log</span>(roi <span class="sc">+</span> <span class="dv">1</span>)</span>
-<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>rf_model <span class="ot">&lt;-</span> <span class="fu">randomForest</span>(</span>
-<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>  llm_class_final <span class="sc">~</span> vote_average <span class="sc">+</span> popularity <span class="sc">+</span> log_budget <span class="sc">+</span> log_roi <span class="sc">+</span> runtime <span class="sc">+</span> genre1_Biography <span class="sc">+</span> genre1_Action <span class="sc">+</span> genre1_Comedy <span class="sc">+</span> genre1_Horror <span class="sc">+</span> genre1_Fantasy,</span>
-<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> combined_movies_filtered,</span>
-<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">ntree =</span> <span class="dv">500</span>,</span>
-<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">mtry =</span> <span class="dv">4</span></span>
-<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a>rf_model</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Setting up data</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>combined_movies_filtered<span class="sc">$</span>llm_class_final <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(combined_movies_filtered<span class="sc">$</span>llm_class_final)</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>combined_movies_filtered <span class="ot">&lt;-</span> combined_movies_filtered <span class="sc">%&gt;%</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_budget =</span> <span class="fu">log</span>(budget),</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_roi =</span> <span class="fu">log</span>(roi)</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Running RF</span></span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>rf_model <span class="ot">&lt;-</span> <span class="fu">randomForest</span>(</span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>  llm_class_final <span class="sc">~</span> vote_average <span class="sc">+</span> popularity <span class="sc">+</span> log_budget <span class="sc">+</span> log_roi <span class="sc">+</span> runtime <span class="sc">+</span> genre1_Biography <span class="sc">+</span> genre1_Action <span class="sc">+</span> genre1_Comedy <span class="sc">+</span> genre1_Horror <span class="sc">+</span> genre1_Fantasy,</span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> combined_movies_filtered,</span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">ntree =</span> <span class="dv">500</span>,</span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">mtry =</span> <span class="dv">4</span></span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a>rf_model</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -578,28 +585,28 @@ Call:
                      Number of trees: 500
 No. of variables tried at each split: 4
 
-        OOB estimate of  error rate: 21.85%
+        OOB estimate of  error rate: 22.23%
 Confusion matrix:
      0   1 class.error
-0 2334 262   0.1009245
-1  531 503   0.5135397</code></pre>
+0 2323 273   0.1051618
+1  534 500   0.5164410</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># evaluate</span></span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">importance</span>(rf_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate RF</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">importance</span>(rf_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                 MeanDecreaseGini
-vote_average           246.475622
-popularity             234.074075
-log_budget             362.634087
-log_roi                267.731732
-runtime                241.559543
-genre1_Biography         8.835834
-genre1_Action           26.786521
-genre1_Comedy           23.317386
-genre1_Horror           33.233197
-genre1_Fantasy           4.517943</code></pre>
+vote_average           246.488961
+popularity             236.314854
+log_budget             361.230739
+log_roi                268.880649
+runtime                240.608070
+genre1_Biography         8.631089
+genre1_Action           26.839519
+genre1_Comedy           23.796453
+genre1_Horror           33.861711
+genre1_Fantasy           4.639150</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">varImpPlot</span>(rf_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">varImpPlot</span>(rf_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -607,91 +614,91 @@ genre1_Fantasy           4.517943</code></pre>
 </figure>
 </div>
 </div>
-<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co"># predict</span></span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>top_movies_post2009_preds<span class="sc">$</span>pred_prob_rf <span class="ot">&lt;-</span> <span class="fu">predict</span>(rf_model, top_movies_post2009, <span class="at">type =</span> <span class="st">"prob"</span>)[,<span class="dv">2</span>]</span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>top_movies_post2009_preds<span class="sc">$</span>pred_class_rf <span class="ot">&lt;-</span> <span class="fu">if_else</span>(top_movies_post2009_preds<span class="sc">$</span>pred_prob_rf <span class="sc">&gt;</span> <span class="fl">0.351</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a><span class="co"># ensemble model</span></span>
-<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>top_movies_post2009_preds <span class="ot">&lt;-</span> top_movies_post2009_preds <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">ensemble_prob =</span> (pred_prob_logit <span class="sc">+</span> pred_prob_rf)<span class="sc">/</span><span class="dv">2</span>)</span>
-<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>top_movies_post2009_preds<span class="sc">$</span>ensemble_class <span class="ot">&lt;-</span> <span class="fu">if_else</span>(top_movies_post2009_preds<span class="sc">$</span>ensemble_prob <span class="sc">&gt;</span> <span class="fl">0.351</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb50-11"><a href="#cb50-11" aria-hidden="true" tabindex="-1"></a><span class="co"># also include key model selection stats and confusion matrix</span></span>
-<span id="cb50-12"><a href="#cb50-12" aria-hidden="true" tabindex="-1"></a><span class="co"># also include clean mean model probably latex</span></span>
-<span id="cb50-13"><a href="#cb50-13" aria-hidden="true" tabindex="-1"></a><span class="co"># also include confusion matrix for manual verification</span></span>
-<span id="cb50-14"><a href="#cb50-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb50-15"><a href="#cb50-15" aria-hidden="true" tabindex="-1"></a>top_movies_post2009_preds_nohorror <span class="ot">&lt;-</span> top_movies_post2009_preds <span class="sc">%&gt;%</span> <span class="fu">filter</span>(genre1_Horror <span class="sc">==</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict with RF</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>top_movies_post2009_preds<span class="sc">$</span>pred_prob_rf <span class="ot">&lt;-</span> <span class="fu">predict</span>(rf_model, top_movies_post2009, <span class="at">type =</span> <span class="st">"prob"</span>)[,<span class="dv">2</span>]</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>top_movies_post2009_preds<span class="sc">$</span>pred_class_rf <span class="ot">&lt;-</span> <span class="fu">if_else</span>(top_movies_post2009_preds<span class="sc">$</span>pred_prob_rf <span class="sc">&gt;</span> <span class="fl">0.351</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine predictions to make ensemble model</span></span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>top_movies_post2009_preds <span class="ot">&lt;-</span> top_movies_post2009_preds <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">ensemble_prob =</span> (pred_prob_logit <span class="sc">+</span> pred_prob_rf)<span class="sc">/</span><span class="dv">2</span>)</span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a>top_movies_post2009_preds<span class="sc">$</span>ensemble_class <span class="ot">&lt;-</span> <span class="fu">if_else</span>(top_movies_post2009_preds<span class="sc">$</span>ensemble_prob <span class="sc">&gt;</span> <span class="fl">0.351</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove movies with primary genre = horror</span></span>
+<span id="cb48-11"><a href="#cb48-11" aria-hidden="true" tabindex="-1"></a>top_movies_post2009_preds_nohorror <span class="ot">&lt;-</span> top_movies_post2009_preds <span class="sc">%&gt;%</span> <span class="fu">filter</span>(genre1_Horror <span class="sc">==</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="visualizing-results" class="level1">
-<h1>Visualizing results</h1>
+<section id="visualizing-results" class="level3">
+<h3 class="anchored" data-anchor-id="visualizing-results">Visualizing results</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cleaning data</span></span>
-<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>manual_titles <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"What We Do in the Shadows"</span>,</span>
-<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Bottoms"</span>,</span>
-<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Shiva Baby"</span>,</span>
-<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Avengers: Infinity War"</span>,</span>
-<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"The Holdovers"</span>,</span>
-<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Portrait of a Lady on Fire"</span>,</span>
-<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Good Time"</span></span>
-<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a>manual_rows <span class="ot">&lt;-</span> top_movies_post2009_preds_nohorror <span class="sc">%&gt;%</span></span>
-<span id="cb51-13"><a href="#cb51-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(title <span class="sc">%in%</span> manual_titles) <span class="sc">%&gt;%</span></span>
-<span id="cb51-14"><a href="#cb51-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(title, ensemble_prob, genre1, genre2)</span>
-<span id="cb51-15"><a href="#cb51-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb51-16"><a href="#cb51-16" aria-hidden="true" tabindex="-1"></a>viz_data <span class="ot">&lt;-</span> top_movies_post2009_preds_nohorror <span class="sc">%&gt;%</span></span>
-<span id="cb51-17"><a href="#cb51-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(title, ensemble_prob, genre1, genre2) <span class="sc">%&gt;%</span></span>
-<span id="cb51-18"><a href="#cb51-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(ensemble_prob)) <span class="sc">%&gt;%</span></span>
-<span id="cb51-19"><a href="#cb51-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(ensemble_prob))</span>
-<span id="cb51-20"><a href="#cb51-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb51-21"><a href="#cb51-21" aria-hidden="true" tabindex="-1"></a>top_n  <span class="ot">&lt;-</span> <span class="dv">10</span></span>
-<span id="cb51-22"><a href="#cb51-22" aria-hidden="true" tabindex="-1"></a>bottom_n <span class="ot">&lt;-</span> <span class="dv">10</span></span>
-<span id="cb51-23"><a href="#cb51-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb51-24"><a href="#cb51-24" aria-hidden="true" tabindex="-1"></a>viz_data <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
-<span id="cb51-25"><a href="#cb51-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(viz_data, <span class="at">n =</span> top_n),</span>
-<span id="cb51-26"><a href="#cb51-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_tail</span>(viz_data, <span class="at">n =</span> bottom_n),</span>
-<span id="cb51-27"><a href="#cb51-27" aria-hidden="true" tabindex="-1"></a>  manual_rows</span>
-<span id="cb51-28"><a href="#cb51-28" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
-<span id="cb51-29"><a href="#cb51-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(title, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span>   <span class="co"># prevent duplicates</span></span>
-<span id="cb51-30"><a href="#cb51-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb51-31"><a href="#cb51-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> forcats<span class="sc">::</span><span class="fu">fct_reorder</span>(title, ensemble_prob)</span>
-<span id="cb51-32"><a href="#cb51-32" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb51-33"><a href="#cb51-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb51-34"><a href="#cb51-34" aria-hidden="true" tabindex="-1"></a><span class="co"># viz</span></span>
-<span id="cb51-35"><a href="#cb51-35" aria-hidden="true" tabindex="-1"></a>okabe_ito <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb51-36"><a href="#cb51-36" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#E69F00"</span>, <span class="co"># orange</span></span>
-<span id="cb51-37"><a href="#cb51-37" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#56B4E9"</span>, <span class="co"># sky blue</span></span>
-<span id="cb51-38"><a href="#cb51-38" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#009E73"</span>, <span class="co"># bluish green</span></span>
-<span id="cb51-39"><a href="#cb51-39" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#F0E442"</span>, <span class="co"># yellow</span></span>
-<span id="cb51-40"><a href="#cb51-40" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#0072B2"</span>, <span class="co"># blue</span></span>
-<span id="cb51-41"><a href="#cb51-41" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#CC79A7"</span>  <span class="co"># reddish purple</span></span>
-<span id="cb51-42"><a href="#cb51-42" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb51-43"><a href="#cb51-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb51-44"><a href="#cb51-44" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(viz_data, <span class="fu">aes</span>(</span>
-<span id="cb51-45"><a href="#cb51-45" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> ensemble_prob,</span>
-<span id="cb51-46"><a href="#cb51-46" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> title,</span>
-<span id="cb51-47"><a href="#cb51-47" aria-hidden="true" tabindex="-1"></a>  <span class="at">color =</span> genre1</span>
-<span id="cb51-48"><a href="#cb51-48" aria-hidden="true" tabindex="-1"></a>)) <span class="sc">+</span></span>
-<span id="cb51-49"><a href="#cb51-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
-<span id="cb51-50"><a href="#cb51-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fl">0.5</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb51-51"><a href="#cb51-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(</span>
-<span id="cb51-52"><a href="#cb51-52" aria-hidden="true" tabindex="-1"></a>    <span class="at">values =</span> okabe_ito,</span>
-<span id="cb51-53"><a href="#cb51-53" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="st">"Primary Genre"</span></span>
-<span id="cb51-54"><a href="#cb51-54" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb51-55"><a href="#cb51-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb51-56"><a href="#cb51-56" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Non-Horror Films with Highest and Lowest Predicted Cult Status + Notable Cases"</span>,</span>
-<span id="cb51-57"><a href="#cb51-57" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Based on Ensemble Model Predictions for Post-2009 Releases"</span>,</span>
-<span id="cb51-58"><a href="#cb51-58" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Predicted Probability of Cult Status"</span>,</span>
-<span id="cb51-59"><a href="#cb51-59" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="cn">NULL</span></span>
-<span id="cb51-60"><a href="#cb51-60" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb51-61"><a href="#cb51-61" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
-<span id="cb51-62"><a href="#cb51-62" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
-<span id="cb51-63"><a href="#cb51-63" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"right"</span>,</span>
-<span id="cb51-64"><a href="#cb51-64" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.major.y =</span> <span class="fu">element_blank</span>()</span>
-<span id="cb51-65"><a href="#cb51-65" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Adding gut check films</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>manual_titles <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"What We Do in the Shadows"</span>,</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Bottoms"</span>,</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Shiva Baby"</span>,</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Avengers: Infinity War"</span>,</span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"The Holdovers"</span>,</span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Portrait of a Lady on Fire"</span>,</span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Good Time"</span></span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>manual_rows <span class="ot">&lt;-</span> top_movies_post2009_preds_nohorror <span class="sc">%&gt;%</span></span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(title <span class="sc">%in%</span> manual_titles) <span class="sc">%&gt;%</span></span>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(title, ensemble_prob, genre1, genre2)</span>
+<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-16"><a href="#cb49-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Select data for plot</span></span>
+<span id="cb49-17"><a href="#cb49-17" aria-hidden="true" tabindex="-1"></a>viz_data <span class="ot">&lt;-</span> top_movies_post2009_preds_nohorror <span class="sc">%&gt;%</span></span>
+<span id="cb49-18"><a href="#cb49-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(title, ensemble_prob, genre1, genre2) <span class="sc">%&gt;%</span></span>
+<span id="cb49-19"><a href="#cb49-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(ensemble_prob)) <span class="sc">%&gt;%</span></span>
+<span id="cb49-20"><a href="#cb49-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(ensemble_prob))</span>
+<span id="cb49-21"><a href="#cb49-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-22"><a href="#cb49-22" aria-hidden="true" tabindex="-1"></a>top_n  <span class="ot">&lt;-</span> <span class="dv">10</span></span>
+<span id="cb49-23"><a href="#cb49-23" aria-hidden="true" tabindex="-1"></a>bottom_n <span class="ot">&lt;-</span> <span class="dv">10</span></span>
+<span id="cb49-24"><a href="#cb49-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-25"><a href="#cb49-25" aria-hidden="true" tabindex="-1"></a>viz_data <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb49-26"><a href="#cb49-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(viz_data, <span class="at">n =</span> top_n),</span>
+<span id="cb49-27"><a href="#cb49-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_tail</span>(viz_data, <span class="at">n =</span> bottom_n),</span>
+<span id="cb49-28"><a href="#cb49-28" aria-hidden="true" tabindex="-1"></a>  manual_rows</span>
+<span id="cb49-29"><a href="#cb49-29" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb49-30"><a href="#cb49-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(title, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb49-31"><a href="#cb49-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb49-32"><a href="#cb49-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> forcats<span class="sc">::</span><span class="fu">fct_reorder</span>(title, ensemble_prob)</span>
+<span id="cb49-33"><a href="#cb49-33" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb49-34"><a href="#cb49-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-35"><a href="#cb49-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Set colors</span></span>
+<span id="cb49-36"><a href="#cb49-36" aria-hidden="true" tabindex="-1"></a>okabe_ito <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb49-37"><a href="#cb49-37" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#E69F00"</span>,</span>
+<span id="cb49-38"><a href="#cb49-38" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#56B4E9"</span>,</span>
+<span id="cb49-39"><a href="#cb49-39" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#009E73"</span>,</span>
+<span id="cb49-40"><a href="#cb49-40" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#F0E442"</span>,</span>
+<span id="cb49-41"><a href="#cb49-41" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#0072B2"</span>,</span>
+<span id="cb49-42"><a href="#cb49-42" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#CC79A7"</span></span>
+<span id="cb49-43"><a href="#cb49-43" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb49-44"><a href="#cb49-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-45"><a href="#cb49-45" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot</span></span>
+<span id="cb49-46"><a href="#cb49-46" aria-hidden="true" tabindex="-1"></a>final_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(viz_data, <span class="fu">aes</span>(</span>
+<span id="cb49-47"><a href="#cb49-47" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> ensemble_prob,</span>
+<span id="cb49-48"><a href="#cb49-48" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> title,</span>
+<span id="cb49-49"><a href="#cb49-49" aria-hidden="true" tabindex="-1"></a>  <span class="at">color =</span> genre1</span>
+<span id="cb49-50"><a href="#cb49-50" aria-hidden="true" tabindex="-1"></a>)) <span class="sc">+</span></span>
+<span id="cb49-51"><a href="#cb49-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb49-52"><a href="#cb49-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fl">0.5</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb49-53"><a href="#cb49-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(</span>
+<span id="cb49-54"><a href="#cb49-54" aria-hidden="true" tabindex="-1"></a>    <span class="at">values =</span> okabe_ito,</span>
+<span id="cb49-55"><a href="#cb49-55" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="st">"Primary Genre"</span></span>
+<span id="cb49-56"><a href="#cb49-56" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb49-57"><a href="#cb49-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb49-58"><a href="#cb49-58" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Non-Horror Films with Highest and Lowest Predicted Cult Status + Notable Cases"</span>,</span>
+<span id="cb49-59"><a href="#cb49-59" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Based on Ensemble Model Predictions for Post-2009 Releases, Excluding Horror Films"</span>,</span>
+<span id="cb49-60"><a href="#cb49-60" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Predicted Probability of Cult Status"</span>,</span>
+<span id="cb49-61"><a href="#cb49-61" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="cn">NULL</span></span>
+<span id="cb49-62"><a href="#cb49-62" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb49-63"><a href="#cb49-63" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb49-64"><a href="#cb49-64" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb49-65"><a href="#cb49-65" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"right"</span>,</span>
+<span id="cb49-66"><a href="#cb49-66" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.major.y =</span> <span class="fu">element_blank</span>()</span>
+<span id="cb49-67"><a href="#cb49-67" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb49-68"><a href="#cb49-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-69"><a href="#cb49-69" aria-hidden="true" tabindex="-1"></a>final_plot</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -699,47 +706,51 @@ genre1_Fantasy           4.517943</code></pre>
 </figure>
 </div>
 </div>
-<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># write takeaways:</span></span>
-<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="co"># fitted mean model of llm_class_final ~ vote_average + popularity + log(budget) + log(roi) + runtime + genre1_Biography + genre1_Action + genre1_Comedy + genre1_Horror + genre1_Fantasy (will write this nicely in latex) with both a logit and random forest</span></span>
-<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a><span class="co"># withheld 30% of pre-2010 data from training to test models, random forest was marginally better but decided to utilize an ensemble model (average of both) for better prediction stability</span></span>
-<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a><span class="co"># talk about model selection/evaluation criteria: high AUC, decent kappa, good sensitivity and specificity</span></span>
-<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a><span class="co"># model heavily favors horror films due to the abundance of short, low budget found-footage style horror films with high ROIs</span></span>
-<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a><span class="co"># excluded primary genre=horror from final viz</span></span>
-<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a><span class="co"># takeaways: model dislikes biographies and adventure films, good at ignoring the box office hits, top films are mostly comedies, with quite a few comedy/horrors, many at the top do seem unconventional enough to become cult classics (heartbeats is about a french canadian love triangle, alps is a Greek psychological drama art film directed by Yorgos Lathimos (who has since gone on to direct very popular and well loved films like Poor Things and Bugonia), stiches is a comedy/horror killer clown movie), while others seem like generic comedy/romances or just unassuming</span></span>
-<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a><span class="co"># ones i added outside top/bottom 10: infinity war is a gut check/it had better be low, bottoms+good time+what we do in the shadows glad they got some type of score but expected higher, portrait of a lady on fire and holdovers have the qualities but are too popular and universally liked to be higher</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co"># write takeaways:</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="co"># fitted mean model of llm_class_final ~ vote_average + popularity + log(budget) + log(roi) + runtime + genre1_Biography + genre1_Action + genre1_Comedy + genre1_Horror + genre1_Fantasy (will write this nicely in latex) with both a logit and random forest</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="co"># withheld 30% of pre-2010 data from training to test models, random forest was marginally better but decided to utilize an ensemble model (average of both) for better prediction stability</span></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="co"># talk about model selection/evaluation criteria: high AUC, decent kappa, good sensitivity and specificity</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a><span class="co"># model heavily favors horror films due to the abundance of short, low budget found-footage style horror films with high ROIs</span></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a><span class="co"># excluded primary genre=horror from final viz</span></span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a><span class="co"># takeaways: model dislikes biographies and adventure films, good at ignoring the box office hits, top films are mostly comedies, with quite a few comedy/horrors, many at the top do seem unconventional enough to become cult classics (heartbeats is about a french canadian love triangle, alps is a Greek psychological drama art film directed by Yorgos Lathimos (who has since gone on to direct very popular and well loved films like Poor Things and Bugonia), stiches is a comedy/horror killer clown movie), while others seem like generic comedy/romances or just unassuming</span></span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a><span class="co"># ones i added outside top/bottom 10: infinity war is a gut check/it had better be low, bottoms+good time+what we do in the shadows glad they got some type of score but expected higher, portrait of a lady on fire and holdovers have the qualities but are too popular and universally liked to be higher</span></span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a><span class="co"># ggsave("seb_final_plot.png", plot = final_plot, width = 12, height = 5, bg = "white")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="heatmap-probably-wont-use" class="level1">
-<h1>heatmap, probably wont use</h1>
+<section id="heatmap-not-used-for-final-presentation" class="level3">
+<h3 class="anchored" data-anchor-id="heatmap-not-used-for-final-presentation">Heatmap (not used for final presentation)</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>heatmap_data <span class="ot">&lt;-</span> top_movies_post2009_preds <span class="sc">%&gt;%</span></span>
-<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(genre1), <span class="sc">!</span><span class="fu">is.na</span>(genre2)) <span class="sc">%&gt;%</span></span>
-<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">genre1 =</span> <span class="fu">factor</span>(genre1, <span class="at">levels =</span> <span class="fu">sort</span>(<span class="fu">unique</span>(genre1))),</span>
-<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">genre2 =</span> <span class="fu">factor</span>(genre2, <span class="at">levels =</span> <span class="fu">sort</span>(<span class="fu">unique</span>(genre2)))</span>
-<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(genre1, genre2) <span class="sc">%&gt;%</span></span>
-<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
-<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_prob =</span> <span class="fu">mean</span>(ensemble_prob, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="fu">n</span>(),</span>
-<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
-<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(n <span class="sc">&gt;=</span> <span class="dv">10</span>)</span>
-<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb53-15"><a href="#cb53-15" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(heatmap_data, <span class="fu">aes</span>(<span class="at">x =</span> genre1, <span class="at">y =</span> genre2, <span class="at">fill =</span> mean_prob)) <span class="sc">+</span></span>
-<span id="cb53-16"><a href="#cb53-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>(<span class="at">color =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
-<span id="cb53-17"><a href="#cb53-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis_c</span>(</span>
-<span id="cb53-18"><a href="#cb53-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="st">"Mean cult probability"</span>,</span>
-<span id="cb53-19"><a href="#cb53-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">option =</span> <span class="st">"magma"</span>,</span>
-<span id="cb53-20"><a href="#cb53-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)</span>
-<span id="cb53-21"><a href="#cb53-21" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb53-22"><a href="#cb53-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb53-23"><a href="#cb53-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Ensemble-Predicted Cult Status by Genre Combination"</span>,</span>
-<span id="cb53-24"><a href="#cb53-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Mean predicted probability (test set)"</span>,</span>
-<span id="cb53-25"><a href="#cb53-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Primary genre"</span>,</span>
-<span id="cb53-26"><a href="#cb53-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Secondary genre"</span></span>
-<span id="cb53-27"><a href="#cb53-27" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb53-28"><a href="#cb53-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare data for heatmap</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>heatmap_data <span class="ot">&lt;-</span> top_movies_post2009_preds <span class="sc">%&gt;%</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(genre1), <span class="sc">!</span><span class="fu">is.na</span>(genre2)) <span class="sc">%&gt;%</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">genre1 =</span> <span class="fu">factor</span>(genre1, <span class="at">levels =</span> <span class="fu">sort</span>(<span class="fu">unique</span>(genre1))),</span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">genre2 =</span> <span class="fu">factor</span>(genre2, <span class="at">levels =</span> <span class="fu">sort</span>(<span class="fu">unique</span>(genre2)))</span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(genre1, genre2) <span class="sc">%&gt;%</span></span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_prob =</span> <span class="fu">mean</span>(ensemble_prob, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb51-13"><a href="#cb51-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb51-14"><a href="#cb51-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(n <span class="sc">&gt;=</span> <span class="dv">10</span>)</span>
+<span id="cb51-15"><a href="#cb51-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-16"><a href="#cb51-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Viz</span></span>
+<span id="cb51-17"><a href="#cb51-17" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(heatmap_data, <span class="fu">aes</span>(<span class="at">x =</span> genre1, <span class="at">y =</span> genre2, <span class="at">fill =</span> mean_prob)) <span class="sc">+</span></span>
+<span id="cb51-18"><a href="#cb51-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>(<span class="at">color =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb51-19"><a href="#cb51-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis_c</span>(</span>
+<span id="cb51-20"><a href="#cb51-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="st">"Mean cult probability"</span>,</span>
+<span id="cb51-21"><a href="#cb51-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">option =</span> <span class="st">"magma"</span>,</span>
+<span id="cb51-22"><a href="#cb51-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb51-23"><a href="#cb51-23" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb51-24"><a href="#cb51-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb51-25"><a href="#cb51-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Ensemble-Predicted Cult Status by Genre Combination"</span>,</span>
+<span id="cb51-26"><a href="#cb51-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Mean predicted probability (test set)"</span>,</span>
+<span id="cb51-27"><a href="#cb51-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Primary genre"</span>,</span>
+<span id="cb51-28"><a href="#cb51-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Secondary genre"</span></span>
+<span id="cb51-29"><a href="#cb51-29" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb51-30"><a href="#cb51-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -747,8 +758,8 @@ genre1_Fantasy           4.517943</code></pre>
 </figure>
 </div>
 </div>
-<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>top_movies_post2009_preds_popular <span class="ot">&lt;-</span> top_movies_post2009_preds <span class="sc">%&gt;%</span> <span class="fu">filter</span>(popularity <span class="sc">&gt;</span> <span class="fl">25.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
 </section>
 
 </main>
